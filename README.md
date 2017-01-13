@@ -110,4 +110,3 @@ docker-compose scale server=1 weather=1 presence=1 heating=X light=X
 ```
 **Notice**: the server need to be defined first, also the amount PresenceDetectors and WeatherObservers are kept as one, because they are sending multicast messages, which may be problematic with multiple instances of them. You can choose the number of radiators and lightcontrollers.
 
-There is also a script docker_scale.sh, which can be used for scaling. It waits for some time between initializing a set of devices (so that system load don't increade sky high). Just edit the number in line six (while loop).
