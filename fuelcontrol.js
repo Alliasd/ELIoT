@@ -1,6 +1,7 @@
 var CoapNode = require('./index.js');
 var SmartObject = require('smartobject');
 var config = require('./lib/config');
+var cutils = require('./lib/components/cutils');
 
 var so = new SmartObject;
 var number = getRandomInt(1, 1000);
@@ -26,7 +27,7 @@ var type = 'Fuel Injection System';
 so.init('4000', 0, {
   7100: {
     read: function(cb) {
-      var path = '/3303/0';
+      var path = '3303:0';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -34,7 +35,7 @@ so.init('4000', 0, {
   },
   7101:  {
     read: function(cb) {
-      var path = '/3316/0';
+      var path = '3316:0';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -42,7 +43,7 @@ so.init('4000', 0, {
   },
   7102:  {
     read: function(cb) {
-      var path = '/3346/0';
+      var path = '3346:0';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -50,7 +51,7 @@ so.init('4000', 0, {
   },
   7103:  {
     read: function(cb) {
-      var path = '/3346/1';
+      var path = '3346:1';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -58,7 +59,7 @@ so.init('4000', 0, {
   },
   7104:  {
     read: function(cb) {
-      var path = '/3323/0';
+      var path = '3323:0';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -66,7 +67,7 @@ so.init('4000', 0, {
   },
   7105:  {
     read: function(cb) {
-      var path = '/3306/0';
+      var path = '3306:0';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -74,7 +75,7 @@ so.init('4000', 0, {
   },
   7106: {
     read: function(cb) {
-      var path = '/3306/1';
+      var path = '3306:1';
       redirect(path, function(val) {
         cb(null, val);
       });
@@ -335,16 +336,16 @@ function getRandomArbitrary(min, max) {
 };
 
 function redirect(path, cb) {
-  var pathArray = path.split('/');
-  /*
-  cnode._dumpObj(pathArray[1], pathArray[2], function(err, val) {
-    console.log('val', val);
-    cb(JSON.stringify(val));
-  })*/
-  cnode.unicast(cnode.ip, cnode.port, path, 'GET', function(err, rsp) {
-    cb(JSON.stringify(rsp.payload));
+  var pathArray = path.split(':');
+  //console.log(pathArray[0], pathArray[1]);
+  cnode.so.dump(pathArray[0],pathArray[1], {restrict: true}, function(err, data) {
+    cb(JSON.stringify(data));
+    //console.log(JSON.stringify(data);
   });
-    //cnode._dumpObj(pathArray[1], pathArray[2], readCallback);
+
+  /*cnode.unicast(cnode.ip, cnode.port, path, 'GET', function(err, rsp) {
+    cb(JSON.stringify(rsp.payload));
+  });*/
 }
 
 function injection(max, callback) {
@@ -413,7 +414,7 @@ cnode.on('registered', function () {
         if (err) {
           console.log(err);
         }
-        console.log(rsp);
+        //console.log(rsp);
         process.exit();
     });
   });
@@ -424,7 +425,7 @@ cnode.on('registered', function () {
         if (err) {
           console.log(err);
         }
-        console.log(rsp);
+        //console.log(rsp);
         process.exit();
     });
   });
@@ -457,5 +458,5 @@ cnode.register('172.17.0.2', 5683, function (err, rsp) {
     if (err) {
       console.log(err);
     }
-    console.log(rsp);
+    //console.log(rsp);
 });
