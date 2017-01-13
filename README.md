@@ -1,6 +1,6 @@
 # Emulated IoT (ELIOT) Platform
 
-IoT emulation platform for testing purposes.
+Emulated IoT platform for testing purposes.
 
 ## Table of Contents
 
@@ -36,7 +36,7 @@ The library is slightly modified to support java-based Leshan demo server and do
 
 5. Multicast functionality is added. Hence, a function *CoapNode.prototype.multicast(path, method, value, callback)* was created. It takes the object path (eg. /3303/0/5700), method (eg. PUT) and value (payload) as parameters and creates a multicast request. Also a function *startMultiListener(cn, callback)* was created to make the clients to listen the multicast address. This needs to be called inside register function (see number 2). One condition is also added to *CoapNode.prototype.request(reqObj, ownAgent, callback)* function.
 
-6. Function *CoapNode.prototype._enableReport(oid, iid, rid, rsp, callback)* is modified to support observation by
+6. Function *CoapNode.prototype._enableReport(oid, iid, rid, rsp, callback)* is modified to support observation with Leshan.
 
 
 The library still has the following limitations:
@@ -111,4 +111,3 @@ docker-compose scale server=1 weather=1 presence=1 heating=X light=X
 **Notice**: the server need to be defined first, also the amount PresenceDetectors and WeatherObservers are kept as one, because they are sending multicast messages, which may be problematic with multiple instances of them. You can choose the number of radiators and lightcontrollers.
 
 There is also a script docker_scale.sh, which can be used for scaling. It waits for some time between initializing a set of devices (so that system load don't increade sky high). Just edit the number in line six (while loop).
-# ELIOT
