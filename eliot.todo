@@ -1,6 +1,18 @@
 Code:
   ☐ Check the smallest docker container possible. Perhaps removing unused libraries.
   ☐ Simplify installation by adding modified docker image to repo.
+  ☐ Add README for Mac and Vagrant.
+  ☐ Captions of simulation running.
 
 Paper:
-  ☐ Paper deadline @due(2017-01-20 16:05)
+  ☐ Paper deadline @due(2017-01-20 16:05).
+  ☐ Ref to Github Repo on paper.
+  ☐ Update changes from Roberto.
+  ☐ Improve layout of graphs.
+  ☐ Add architecture image.
+  ☐ There is too much information about the use cases. 
+
+
+Other:
+  ☐ Advertize on OMA and IETF.
+  ☐ Blog post.
