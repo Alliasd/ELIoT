@@ -1,0 +1,6 @@
+Code:
+  ☐ Check the smallest docker container possible. Perhaps removing unused libraries.
+  ☐ Simplify installation by adding modified docker image to repo.
+
+Paper:
+  ☐ Paper deadline @due(2017-01-20 16:05)
