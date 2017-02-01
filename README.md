@@ -87,11 +87,11 @@ Check the registration address of register(ip, port) function in the javaScript 
 
 Build the image for the devices with provided Dockerfile using command:
 ```
-docker build -t `<image_name>` .
+docker build -t <image_name> .
 ```
 Now, the different clients can be run by specifying the correct javascript file within the run command:
 ```
-docker run -e FILE=""<jsfile_name> <SERVER_IP>" -it <image_name> 
+docker run -e FILE="<jsfile_name> <SERVER_IP>" -it <image_name>
 ```
 
 **Set up Docker-compose**
