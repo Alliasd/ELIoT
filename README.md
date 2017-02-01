@@ -91,7 +91,7 @@ docker build -t `<image_name>` .
 ```
 Now, the different clients can be run by specifying the correct javascript file within the run command:
 ```
-docker run -e FILE=`<jsfile_name>` -it `<image_name>`
+docker run -e FILE=""<jsfile_name> <SERVER_IP>" -it <image_name> 
 ```
 
 **Set up Docker-compose**
@@ -109,4 +109,3 @@ If you want to run multiple devices you can use the scaling option with the foll
 docker-compose scale server=1 weather=1 presence=1 heating=X light=X
 ```
 **Notice**: the server need to be defined first, also the amount PresenceDetectors and WeatherObservers are kept as one, because they are sending multicast messages, which may be problematic with multiple instances of them. You can choose the number of radiators and lightcontrollers.
-
