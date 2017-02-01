@@ -1,11 +1,13 @@
 var CoapNode = require('./index.js');
 var SmartObject = require('smartobject');
 var config = require('./lib/config');
-var cutils = require('./lib/components/cutils');
 
 var so = new SmartObject;
 var number = getRandomInt(1, 1000);
 var cnode = new CoapNode('FuelControlSystem'+number, so);
+
+//LWM2M Server ip
+var ip = process.argv[2];
 
 var num = getRandomArbitrary(-90, 90);
 var latitude = (Math.round(num*10) / 100).toString();
@@ -454,7 +456,7 @@ cnode.on('deregistered', function () {
 
 
 // Register
-cnode.register('172.17.0.2', 5683, function (err, rsp) {
+cnode.register(ip, 5683, function (err, rsp) {
     if (err) {
       console.log(err);
     }

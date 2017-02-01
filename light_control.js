@@ -1,11 +1,14 @@
 var CoapNode = require('./lib/coap-node.js');
 var SmartObject = require('smartobject');
-var config = require('./config');
+var config = require('./lib/config');
 var shortid = require('shortid');
 
 var so = new SmartObject;
 var ID = shortid.generate();
 var cnode = new CoapNode('LightController'+'_'+ID, so);
+
+//LWM2M Server ip
+var ip = process.argv[2];
 
 var num = getRandomArbitrary(-90, 90);
 var latitude = (Math.round(num*10) / 100).toString();
@@ -191,7 +194,7 @@ function reboot() {
         if (err) {
           console.log(err);
         } else {
-          cnode.register('172.17.0.2', 5683, function (err, rsp) {
+          cnode.register(ip, 5683, function (err, rsp) {
               if (err) {
                 console.log(err);
               }
@@ -274,7 +277,7 @@ cnode.on('deregistered', function () {
 });
 
 // Register
-cnode.register('172.17.0.2', 5683, function (err, rsp) {
+cnode.register(ip, 5683, function (err, rsp) {
   if (err) {
     console.log(err);
   }

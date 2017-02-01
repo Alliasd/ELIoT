@@ -10,6 +10,9 @@ var so = new SmartObject;
 var ID = shortid.generate();
 var cnode = new CoapNode('Weather'+'_'+ID, so);
 
+//LWM2M Server ip
+var ip = process.argv[2];
+
 // Try to find a real temperature sensor and its location
 var status = false;
 var num = getRandomArbitrary(-90, 90);
@@ -310,7 +313,7 @@ function reboot() {
       if (err) {
         console.log(err);
       } else {
-        cnode.register('172.18.0.2', 5683, function (err, rsp) {
+        cnode.register(ip, 5683, function (err, rsp) {
           if (err) {
             console.log(err);
           }
@@ -398,7 +401,7 @@ cnode.on('error', function(err, rsp) {
     //console.log(rsp);
 });
 
-// Multicast closed
+// Multicast
 cnode.on('multicast', function() {
   //console.log('multicast');
 });
@@ -415,7 +418,7 @@ cnode.on('deregistered', function () {
 
 
 // Register
-cnode.register('172.17.0.2', 5683, function (err, rsp) {
+cnode.register(ip, 5683, function (err, rsp) {
     if (err) {
       console.log(err);
     }

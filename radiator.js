@@ -10,6 +10,9 @@
   var ID = shortid.generate();
   var cnode = new CoapNode('Radiator'+'_'+ID, so);
 
+  //LWM2M Server ip
+  var ip = process.argv[2];
+
   var num = getRandomArbitrary(-90, 90);
   var latitude = (Math.round(num*10) / 100).toString();
   num = getRandomArbitrary(-180, 180);
@@ -173,7 +176,7 @@
           if (err) {
             console.log(err);
           } else {
-            cnode.register('172.17.0.2', 5683, function (err, rsp) {
+            cnode.register(ip, 5683, function (err, rsp) {
                 if (err) {
                   console.log(err);
                 }
@@ -206,22 +209,6 @@
   function getRandomArbitrary(min, max) {
     return Math.random() * (max - min) + min;
   };
-
-  // multicast
-
-  function multicast(path, method, value) {
-    cnode.multicast(path, method, value, function(err,rsp) {
-      if(err) {
-        console.log(err);
-      } else {
-        if (rsp.status === '2.05') {
-          address = rsp.address;
-        }
-      }
-    });
-  }
-
-  var address;
 
   // Events
 
@@ -275,7 +262,7 @@
 
 
   // Register
-  cnode.register('172.17.0.2', 5683, function (err, rsp) {
+  cnode.register(ip, 5683, function (err, rsp) {
       if (err) {
         console.log(err);
       }
