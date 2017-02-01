@@ -2,15 +2,20 @@ Code:
   ☐ Check the smallest docker container possible. Perhaps removing unused libraries.
   ☐ Simplify installation by adding modified docker image to repo.
   ☐ Add README for Mac and Vagrant.
+  ☐ Tutorial when running simulation.
   ☐ Captions of simulation running.
+  ☐ Are we elligible to http://www.f-interop.eu/index.php/open-call ?? @due(2017-01-22 16:05)
 
 Paper:
-  ☐ Paper deadline @due(2017-01-20 16:05).
-  ☐ Ref to Github Repo on paper.
-  ☐ Update changes from Roberto.
-  ☐ Improve layout of graphs.
-  ☐ Add architecture image.
-  ☐ There is too much information about the use cases. 
+  ✘ Paper deadline @due(2017-01-20 16:05). @cancelled(2017-01-24 15:55) @project(Paper)
+  ☐ Enhanced paper towards conf/journal publication.
+  ☐ 
+  ✔ Ref to Github Repo on paper. @done(2017-01-24 15:55) @project(Paper)
+  ✔ Update changes from Roberto. @done(2017-01-24 15:55) @project(Paper)
+  ✔ Improve layout of graphs. @done(2017-01-24 15:55) @project(Paper)
+  ✔ Add architecture image. @done(2017-01-24 15:55) @project(Paper)
+  ✔ There is too much information about the use cases. @done(2017-01-24 15:55) @project(Paper)
+  ☐ Reference platform F-Interop has 4755 nodes. <http://www.f-interop.eu/index.php/about-f-interop/aims-and-objectives>
 
 
 Other:
