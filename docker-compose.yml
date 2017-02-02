@@ -1,7 +1,7 @@
 version: '2'
 
 services:
-    server:
+    ms:
         image: gebart/leshan
         ports:
         - 8081:8080
@@ -12,7 +12,7 @@ services:
         - FILE=${WEATHER}
         #mem_limit: 4m
         depends_on:
-        - server
+        - ms
     presence:
         build:
            context: .
@@ -20,7 +20,7 @@ services:
         - FILE=${PRESENCE}
         #mem_limit: 4m
         depends_on:
-        - server
+        - ms
     radiator:
        build:
          context: .
@@ -28,7 +28,7 @@ services:
        - FILE=${RADIATOR}
        #mem_limit: 4m
        depends_on:
-       - server
+       - ms
     light:
        build:
          context: .
@@ -36,4 +36,4 @@ services:
        - FILE=${LIGHT}
        #mem_limit: 4m
        depends_on:
-       - server
+       - ms
