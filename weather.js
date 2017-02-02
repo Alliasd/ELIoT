@@ -19,7 +19,7 @@ var num = getRandomArbitrary(-90, 90);
 var latitude = (Math.round(num*10) / 100).toString();
 num = getRandomArbitrary(-180, 180);
 var longitude = (Math.round(num*10) / 100).toString();
-var mode = process.argv[2];
+var mode = process.argv[3];
 find(mode);
 
 // Init objects+resources

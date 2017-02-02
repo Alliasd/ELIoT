@@ -81,7 +81,7 @@ Run the server with the command:
 docker run -p 8080:8080/tcp -p 5683:5683/udp
 ```
 
-**Set up the LWM2M CLients (devices)**
+**Set up the LWM2M Clients (devices)**
 
 Check the registration address of register(ip, port) function in the javaScript files and set the correct LWM2M Server address. Docker assigns address typically from pool 172.17.0.0/16. Thus, the server address is 172.17.0.x. (You see the correct address when server is started).
 
@@ -95,6 +95,8 @@ docker run -e FILE="<jsfile_name> <SERVER_IP>" -it <image_name>
 ```
 
 **Set up Docker-compose**
+
+Docker-compose uses a separate ".env" file to configure the clients with the correct js-files and IP addresses. The default address is currently "172.20.0.2". If you need to change it, modify the ".env" file or export the variables from the command line with the command `export VARIABLE=VALUE`. Verify the configuration with the command `docker-compose config`.
 
 Build the images for docker-compose with the command:
 ```

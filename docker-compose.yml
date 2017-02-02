@@ -1,0 +1,39 @@
+version: '2'
+
+services:
+    server:
+        image: gebart/leshan
+        ports:
+        - 8081:8080
+    weather:
+        build:
+           context: .
+        environment:
+        - FILE=${WEATHER}
+        #mem_limit: 4m
+        depends_on:
+        - server
+    presence:
+        build:
+           context: .
+        environment:
+        - FILE=${PRESENCE}
+        #mem_limit: 4m
+        depends_on:
+        - server
+    radiator:
+       build:
+         context: .
+       environment:
+       - FILE=${RADIATOR}
+       #mem_limit: 4m
+       depends_on:
+       - server
+    light:
+       build:
+         context: .
+       environment:
+       - FILE=${LIGHT}
+       #mem_limit: 4m
+       depends_on:
+       - server
