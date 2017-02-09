@@ -9,12 +9,10 @@ COPY package.json /usr/src/app/
 RUN npm install
 
 # Bundle app source
-COPY . /usr/src/app
+COPY . ./devices /usr/src/app/
 
 # Application's default ports
 EXPOSE 5683
-
-STOPSIGNAL WINCH
 
 ENV FILE $FILE
 CMD node $FILE

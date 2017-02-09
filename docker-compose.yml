@@ -4,34 +4,31 @@ services:
     ms:
         image: gebart/leshan
         ports:
-        - 8081:8080
+        - 8080:8080
+        - 5683:5683
     weather:
-        build:
-           context: .
+        image: alliasd/eliot
         environment:
         - FILE=${WEATHER}
         #mem_limit: 4m
         depends_on:
         - ms
     presence:
-        build:
-           context: .
+        image: alliasd/eliot
         environment:
         - FILE=${PRESENCE}
         #mem_limit: 4m
         depends_on:
         - ms
     radiator:
-       build:
-         context: .
+       image: alliasd/eliot
        environment:
        - FILE=${RADIATOR}
        #mem_limit: 4m
        depends_on:
        - ms
     light:
-       build:
-         context: .
+       image: alliasd/eliot
        environment:
        - FILE=${LIGHT}
        #mem_limit: 4m
