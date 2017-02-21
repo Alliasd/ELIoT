@@ -7,16 +7,94 @@ var so = new SmartObject;
 var ID = shortid.generate();
 var cnode = new CoapNode('LightController'+'_'+ID, so);
 
-//LWM2M Server ip
-var ip = process.argv[2];
+// Config parameters
+var ip = process.argv[2],
+    bs = false,
+    status = false,
+    latitude = (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),
+    longitude = (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString();
 
-var num = getRandomArbitrary(-90, 90);
-var latitude = (Math.round(num*10) / 100).toString();
-num = getRandomArbitrary(-180, 180);
-var longitude = (Math.round(num*10) / 100).toString();
-console.log('Sensor with random data');
+// Command line arguments
+process.argv.forEach(function (val, index, array) {
+    // Bootstrap
+    if (val === '-b') {
+        bs = true;
 
-// Init objects+resources
+        // Security Object
+        so.init(0, 0, {0: 'coap://172.17.0.3:5683', 1: true, 2: 3});
+        so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
+
+        // Server Object
+        so.init(1, 1, {
+          0: 1,
+          1: cnode.lifetime,
+          2: cnode._config.defaultMinPeriod,
+          3: cnode._config.defaultMaxPeriod,
+          6: false,
+          7: 'U'
+        });
+
+        cnode.bootstrap(ip, 5683, function (err, rsp) {
+            if (err) {
+              console.log(err);
+            }
+        });
+    }
+});
+
+// Init LWM2M objects
+
+// Server Object
+so.init(1, 0, {
+  0: 0,                                                    // ServerID
+  1: cnode.lifetime,                                       // Lifetime
+  2: cnode._config.defaultMinPeriod,
+  3: cnode._config.defaultMaxPeriod,
+  6: false,
+  7: 'U',
+  8: {                                                    // Update
+    exec: function(cb) {
+      update();
+      cb(null);
+    }
+  }
+});
+
+// Device Object
+so.init(3, 0, {
+  0: 'Manu',              		                     // Manufactorer name
+  1: getRandomInt(1, 100).toString(),              // Model number
+  4: {
+    exec: function(cb) {                             // Reboot
+      reboot();
+      cb(null);
+    }
+  },
+  5: {                                               // Reset
+    exec: function(cb) {
+      cnode.lifetime = 86400;
+      so.set('1', 0, '2', 10);
+      so.set('1', 0, '3', 60);
+      cb(null);
+    }
+  },
+  16: 'U'                                           // Binding mode
+});
+
+// Location Object
+so.init(6, 0, {
+  0: latitude,                                      // Latitude
+  1: longitude,                                      // Longitude
+  5: Math.floor(Date.now() / 1000)                  // Timestamp
+});
+
+// Connection Monitoring
+so.init(4, 0, {
+  4: cnode.ip,
+  5: 'unknown'
+});
+
+// Init IPSO objects
 
 // Light Conrtol
 var control = false;
@@ -72,120 +150,6 @@ so.init(3311, 0, {
     }
 });
 
-// Security Object
-so.init(0, 0, {
-  0: {                                                 // ServerURI
-    exec: function(cb) {
-      var serverURI = 'coap://' + cnode._serverIp + ':' + cnode._serverPort;
-      console.log(serverURI);
-      cb(null, serverURI);
-    }
-  },
-  1: {
-    exec: function(cb) {                              // Bootstrap Server
-      var bs = false;
-      console.log(bs);
-      cb(null, bs);
-    }
-  },
-  2: {
-    exec: function(cb) {
-      var secMode = 3
-      console.log(secMode);
-      cb(null, secMode);
-    }
-  }
-});
-
-// Server Object
-so.init(1, 0, {
-  0: getRandomInt(1, 65535),                           // ServerID
-  1: {                                                 // Lifetime
-    read: function(cb) {
-      cb(null, cnode.lifetime);
-    },
-    write: function(val, cb) {
-      cnode.lifetime = val;
-      cb(null, val);
-    }
-  },
-  2: {
-    read: function(cb) {
-      cb(null, config.defaultMinPeriod);
-    },
-    write: function(val, cb) {
-      config.defaultMinPeriod = val;
-      cb(null, val);
-    }
-  },
-  3: {
-    read: function(cb) {
-      cb(null, config.defaultMaxPeriod);
-    },
-    write: function(val, cb) {
-      config.defaultMaxPeriod = val;
-      cb(null, val);
-    }
-  },
-  8: {                                                // Update
-    exec: function(cb) {
-      update();
-      cb(null);
-    }
-  }
-});
-
-// Device Object
-var number = getRandomInt(1, 1000);
-so.init(3, 0, {
-  0: 'Manufactorer1'+number,		                     // Manufactorer name
-  1: getRandomInt(1, 10000).toString(),              // Model number
-  4: {
-    exec: function(cb) {
-      reboot();
-      cb(null);
-    }
-  },
-  5: {
-    exec: function(cb) {
-      cnode.lifetime = 86400;
-      min = config.defaultMinPeriod;
-      max = config.defaultMaxPeriod;
-      cb(null);
-    }
-  },
-  16: 'U'                                           // Binding mode
-});
-
-// Location Object
-so.init(6, 0, {
-  0: {                                              // Latitude
-    read: function(cb) {
-      cb(null, latitude);
-    }
-  },
-  1: {                                              // Longitude
-    read: function(cb) {
-      cb(null, longitude)
-    }
-  },
-  5: Math.floor(Date.now() / 1000)                  // Timestamp
-});
-
-// Connection Monitoring
-so.init(4, 0, {
-  4: {
-    read: function(cb) {
-      cb(null, this.ip);
-    }
-  },
-  5: {
-    read: function(cb) {
-      cb(null, this.so.connMonitor[0].routeIp);
-    }
-  }
-});
-
 // Exec Functions
 
 // Reboot
@@ -216,8 +180,6 @@ function update() {
   });
 }
 
-
-
 // Support functions
 
 // Random float number generator, rounded to 1 decimal
@@ -231,7 +193,6 @@ function getRandomInt(min, max) {
 };
 
 
-
 // Event handlers
 
 // This event fired when the device registered (2.01)
@@ -242,16 +203,20 @@ cnode.on('registered', function () {
   process.on('SIGTERM', function() {
     process.stdout.write('\n');
     cnode.deregister(function (err, rsp) {
-          //console.log(rsp);
-          process.exit();
+        if (err) {
+          console.log(err);
+        }
+        process.exit();
     });
   });
 
   process.on('SIGINT', function() {
     process.stdout.write('\n');
     cnode.deregister(function (err, rsp) {
-          //console.log(rsp);
-          process.exit();
+        if (err) {
+          console.log(err);
+        }
+        process.exit();
     });
   });
 });
@@ -276,9 +241,31 @@ cnode.on('deregistered', function () {
     console.log('deregistered');
 });
 
-// Register
-cnode.register(ip, 5683, function (err, rsp) {
-  if (err) {
-    console.log(err);
-  }
+// This event fired when the device bootstrapped (2.02).
+cnode.on('bootstrapped', function () {
+    console.log('bootstrapped');
+
+    ip = so.get('0', 1, '0');
+    ip = ip.substring(7, ip.length);
+    ip = ip.substring(0, ip.indexOf(':'));
+
+    // Register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
 });
+
+// No BS server
+if (bs === false) {
+    // Security Object
+    so.init(0, 0, { 0: 'coap://' + cnode.ip + ':5683', 1: false, 2: 3});
+
+    // Register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+}
