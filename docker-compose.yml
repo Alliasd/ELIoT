@@ -2,7 +2,7 @@ version: '2'
 
 services:
     ms:
-        image: gebart/leshan
+        image: corfr/leshan
         ports:
         - 8080:8080
         - 5683:5683
