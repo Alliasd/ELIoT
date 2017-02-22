@@ -2,6 +2,7 @@ var CoapNode = require('./lib/coap-node.js');
 var SmartObject = require('smartobject');
 var config = require('./lib/config');
 var shortid = require('shortid');
+var cutils = require('./lib/components/cutils');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -53,8 +54,8 @@ so.init(1, 0, {
   6: false,
   7: 'U',
   8: {                                                    // Update
-    exec: function(cb) {
-      update();
+    exec: function(attrs, cb) {
+      update(attrs);
       cb(null);
     }
   }
@@ -72,9 +73,7 @@ so.init(3, 0, {
   },
   5: {                                               // Reset
     exec: function(cb) {
-      cnode.lifetime = 86400;
-      so.set('1', 0, '2', 10);
-      so.set('1', 0, '3', 60);
+      reset();
       cb(null);
     }
   },
@@ -170,14 +169,49 @@ function reboot() {
 };
 
 // Update
-function update() {
+function update(attrs) {
   // Set lifetime, version attributes
-  cnode.setDevAttrs({lifetime: cnode.lifetime}, {version: '1.0.0'}, function (err, rsp) {
+  cnode.update({lifetime: attrs}, {version: '1.0.0'}, function (err, rsp) {
     if(err) {
       console.log(err);
     }
-    console.log(rsp);   // { status: '2.04' }
   });
+}
+
+// Factory reset
+function reset() {
+  if (bs === false) {
+    so.set('1',0,'1', 86000);
+    so.set('1',0,'2', 10);
+    so.set('1',0,'3', 60);
+
+    // Delete all extra object instances
+    var obj = cnode.getSmartObject();
+    for (var i=0, item; item = obj.objectList()[i]; i++) {
+        for (var j=1, iid; iid = item.iid[j]; j++) {
+            var oid = cutils.oidKey(item.oid);
+            delete obj[oid][iid];
+        }
+    }
+
+    //De-register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+
+  } else {
+    // Re-bootstrap
+    ip = so.get('0', 0, '0');
+    ip = ip.substring(7, ip.length);
+    ip = ip.substring(0, ip.indexOf(':'));
+    cnode.bootstrap(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+  }
 }
 
 // Support functions
@@ -195,30 +229,30 @@ function getRandomInt(min, max) {
 
 // Event handlers
 
+// Trap signals -> de-register
+process.on('SIGTERM', function() {
+  process.stdout.write('\n');
+  cnode.deregister(function (err, rsp) {
+      if (err) {
+        console.log(err);
+      }
+      process.exit();
+  });
+});
+
+process.on('SIGINT', function() {
+  process.stdout.write('\n');
+  cnode.deregister(function (err, rsp) {
+      if (err) {
+        console.log(err);
+      }
+      process.exit();
+  });
+});
+
 // This event fired when the device registered (2.01)
 cnode.on('registered', function () {
   console.log('registered');
-
-  // Client terminated -> de-register
-  process.on('SIGTERM', function() {
-    process.stdout.write('\n');
-    cnode.deregister(function (err, rsp) {
-        if (err) {
-          console.log(err);
-        }
-        process.exit();
-    });
-  });
-
-  process.on('SIGINT', function() {
-    process.stdout.write('\n');
-    cnode.deregister(function (err, rsp) {
-        if (err) {
-          console.log(err);
-        }
-        process.exit();
-    });
-  });
 });
 
 // This event fired when there is an announce from the Server
