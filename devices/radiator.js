@@ -6,6 +6,8 @@
   var config = require('./lib/config');
   var shortid = require('shortid');
   var cutils = require('./lib/components/cutils');
+  var http = require('http');
+  var fs = require('fs');
 
   var so = new SmartObject;
   var ID = shortid.generate();
@@ -38,11 +40,32 @@
             7: 'U'
           });
 
-          cnode.bootstrap(ip, 5683, function (err, rsp) {
-              if (err) {
-                console.log(err);
-              }
+          // Send bootstrap information to BS Server
+          var options = {
+            hostname: ip,
+            port: 8080,
+            path: '/api/bootstrap/' + cnode.clientName,
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json'
+            }
+          };
+
+          var stream = fs.createReadStream('./data.json');
+          var req = http.request(options, function(res) {
+            // Send bootstrap request
+            cnode.bootstrap(ip, 5683, function (err, rsp) {
+                if (err) {
+                  console.log(err);
+                }
+            });
           });
+
+          req.on('error', (e) => {
+            console.log(`problem with request: ${e.message}`);
+          });
+          
+          stream.pipe(req);
       }
   });
 

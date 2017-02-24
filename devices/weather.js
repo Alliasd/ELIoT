@@ -6,10 +6,11 @@ var weather = require('openweathermap');
 var fs = require('fs');
 var shortid = require('shortid');
 var cutils = require('./lib/components/cutils');
+var http = require('http');
 
 var so = new SmartObject;
 var ID = shortid.generate();
-var cnode = new CoapNode('Weather'+'_'+ID, so);
+var cnode = new CoapNode('Weather_'+ID, so);
 
 // Config parameters
 var ip = process.argv[2],
@@ -43,11 +44,32 @@ process.argv.forEach(function (val, index, array) {
           7: 'U'
         });
 
-        cnode.bootstrap(ip, 5683, function (err, rsp) {
-            if (err) {
-              console.log(err);
-            }
+        // Send bootstrap information to BS Server
+        var options = {
+          hostname: ip,
+          port: 8080,
+          path: '/api/bootstrap/' + cnode.clientName,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        var stream = fs.createReadStream('./data.json');
+        var req = http.request(options, function(res) {
+          // Send bootstrap request
+          cnode.bootstrap(ip, 5683, function (err, rsp) {
+              if (err) {
+                console.log(err);
+              }
+          });
         });
+
+        req.on('error', (e) => {
+          console.log(`problem with request: ${e.message}`);
+        });
+
+        stream.pipe(req);
     }
 });
 
@@ -440,7 +462,7 @@ cnode.on('bootstrapped', function () {
 // No BS server
 if (bs === false) {
     // Security Object
-    so.init(0, 0, { 0: 'coap://' + cnode.ip + ':5683', 1: false, 2: 3});
+    so.init(0, 0, { 0: 'coap://' + ip + ':5683', 1: false, 2: 3});
 
     // Find sensoe data;
     find(mode);

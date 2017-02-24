@@ -3,6 +3,8 @@ var SmartObject = require('smartobject');
 var config = require('./lib/config');
 var shortid = require('shortid');
 var cutils = require('./lib/components/cutils');
+var http = require('http');
+var fs = require('fs');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -35,11 +37,32 @@ process.argv.forEach(function (val, index, array) {
           7: 'U'
         });
 
-        cnode.bootstrap(ip, 5683, function (err, rsp) {
-            if (err) {
-              console.log(err);
-            }
+        // Send bootstrap information to BS Server
+        var options = {
+          hostname: ip,
+          port: 8080,
+          path: '/api/bootstrap/' + cnode.clientName,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        var stream = fs.createReadStream('./data.json');
+        var req = http.request(options, function(res) {
+          // Send bootstrap request
+          cnode.bootstrap(ip, 5683, function (err, rsp) {
+              if (err) {
+                console.log(err);
+              }
+          });
         });
+
+        req.on('error', (e) => {
+          console.log(`problem with request: ${e.message}`);
+        });
+        
+        stream.pipe(req);
     }
 });
 
@@ -56,7 +79,7 @@ so.init(1, 0, {
   8: {                                                    // Update
     exec: function(attrs, cb) {
       update(attrs);
-      cb(null);
+      cb(null)
     }
   }
 });
@@ -294,7 +317,7 @@ cnode.on('bootstrapped', function () {
 // No BS server
 if (bs === false) {
     // Security Object
-    so.init(0, 0, { 0: 'coap://' + cnode.ip + ':5683', 1: false, 2: 3});
+    so.init(0, 0, { 0: 'coap://' + ip + ':5683', 1: false, 2: 3});
 
     // Register
     cnode.register(ip, 5683, function (err, rsp) {
