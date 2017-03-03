@@ -1,11 +1,7 @@
 
 var CoapNode = require('./index.js');
 var SmartObject = require('smartobject');
-var config = require('./lib/config');
 var shortid = require('shortid');
-var cutils = require('./lib/components/cutils');
-var http = require('http');
-var fs = require('fs');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -13,15 +9,14 @@ var cnode = new CoapNode('PresenceDetector'+'_'+ID, so);
 
 // Config parameters
 var ip = process.argv[2],
-    bs = false,
-    status = false,
-    latitude = (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),
-    longitude = (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString();
+    bs = false;
 
 // Command line arguments
 process.argv.forEach(function (val, index, array) {
     // Bootstrap
     if (val === '-b') {
+        var http = require('http');
+        var fs = require('fs');
         bs = true;
 
         // Security Object
@@ -29,14 +24,7 @@ process.argv.forEach(function (val, index, array) {
         so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
         // Server Object
-        so.init(1, 1, {
-          0: 1,
-          1: cnode.lifetime,
-          2: cnode._config.defaultMinPeriod,
-          3: cnode._config.defaultMaxPeriod,
-          6: false,
-          7: 'U'
-        });
+        so.init(1, 1, {0: 1, 1: cnode.lifetime, 2: cnode._config.defaultMinPeriod, 3: cnode._config.defaultMaxPeriod, 6: false, 7: 'U'});
 
         // Send bootstrap information to BS Server
         var options = {
@@ -62,7 +50,7 @@ process.argv.forEach(function (val, index, array) {
         req.on('error', (e) => {
           console.log(`problem with request: ${e.message}`);
         });
-        
+
         stream.pipe(req);
     }
 });
@@ -71,13 +59,13 @@ process.argv.forEach(function (val, index, array) {
 
 // Server Object
 so.init(1, 0, {
-  0: 0,                                                    // ServerID
-  1: cnode.lifetime,                                       // Lifetime
+  0: 0,                                                                         // ServerID
+  1: cnode.lifetime,                                                            // Lifetime
   2: cnode._config.defaultMinPeriod,
   3: cnode._config.defaultMaxPeriod,
   6: false,
   7: 'U',
-  8: {                                                    // Update
+  8: {                                                                          // Update
     exec: function(attrs, cb) {
       update(attrs);
       cb(null);
@@ -87,28 +75,22 @@ so.init(1, 0, {
 
 // Device Object
 so.init(3, 0, {
-  0: 'Manu',              		                     // Manufactorer name
-  1: getRandomInt(1, 100).toString(),              // Model number
-  4: {
-    exec: function(cb) {                             // Reboot
-      reboot();
-      cb(null);
-    }
-  },
-  5: {                                               // Reset
+  0: 'Manu',              		                                                  // Manufactorer name
+  1: getRandomInt(1, 100).toString(),                                           // Model number
+  5: {                                                                          // Foactory Reset
     exec: function(cb) {
       reset();
       cb(null);
     }
   },
-  16: 'U'                                           // Binding mode
+  16: 'U'                                                                       // Binding mode
 });
 
 // Location Object
 so.init(6, 0, {
-  0: latitude,                                      // Latitude
-  1: longitude,                                      // Longitude
-  5: Math.floor(Date.now() / 1000)                  // Timestamp
+  0: (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),             // Latitude
+  1: (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString(),           // Longitude
+  5: Math.floor(Date.now() / 1000)                                              // Timestamp
 });
 
 // Connection Monitoring
@@ -120,39 +102,29 @@ so.init(4, 0, {
 // Init IPSO objects
 
 // Presence Sensor
-var state = false;
-var lights = false;
-var array = ['false', 'true'];
-var counter = 0;
-//var start = new Date();
+var state = false,
+    array = ['false', 'true'],
+    counter = 0;
+
 so.init(3302,0, {
   5500: {
     read: function(cb) {
-      //var end = Math.round((new Date() - start) / 1000);
-      var randomNumber = Math.floor(Math.random()*array.length);
-      var val = array[randomNumber];
-
+      var val = array[Math.floor(Math.random()*array.length)];
       if (val === 'true' && Boolean(state) === false) {
           state = true;
           counter += 1;
+          cnode.multicast('/3311/0/5850', 'PUT', '1', function(err, rsp) {
+            if (err) {
+              console.log(err);
+            }
+          });
       } else if (val === 'false' && Boolean(state) === true) {
           state = false;
-      }
-
-      if (Boolean(state) === true && Boolean(lights) === false) {
-        cnode.multicast('/3311/0/5850', 'PUT', '1', function(err, rsp) {
-          if (err) {
-            console.log(err);
-          }
-          lights = true;
-        });
-      } else if (Boolean(state) === false && Boolean(lights) === true) {
-        cnode.multicast('/3311/0/5850', 'PUT', '0', function(err, rsp) {
-          if (err) {
-            console.log(err);
-          }
-          lights = false;
-        });
+          cnode.multicast('/3311/0/5850', 'PUT', '0', function(err, rsp) {
+            if (err) {
+              console.log(err);
+            }
+          });
       }
       cb(null, state);
     }
@@ -172,23 +144,6 @@ so.init(3302,0, {
 
 
 // Exec Functions
-
-// Reboot
-function reboot() {
-  cnode.deregister(function (err, rsp) {
-        if (err) {
-          console.log(err);
-        } else {
-          cnode.register(ip, 5683, function (err, rsp) {
-              if (err) {
-                console.log(err);
-              }
-              console.log(rsp);
-          });
-        }
-        console.log(rsp);
-  });
-};
 
 // Update
 function update(attrs) {
@@ -210,9 +165,8 @@ function reset() {
     // Delete all extra object instances
     var obj = cnode.getSmartObject();
     for (var i=0, item; item = obj.objectList()[i]; i++) {
-        for (var j=1, iid; iid = item.iid[j]; j++) {
-            var oid = cutils.oidKey(item.oid);
-            delete obj[oid][iid];
+        for (var j=1; item.iid[j]; j++) {
+            cnode.deleteInst(item.oid, item.iid[j]);
         }
     }
     //De-register

@@ -1,12 +1,8 @@
 
 var CoapNode = require('./index.js');
 var SmartObject = require('smartobject');
-var config = require('./lib/config');
 var weather = require('openweathermap');
-var fs = require('fs');
 var shortid = require('shortid');
-var cutils = require('./lib/components/cutils');
-var http = require('http');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -21,13 +17,15 @@ var ip = process.argv[2],
     mode;
 
 // Command line arguments
-process.argv.forEach(function (val, index, array) {
+process.argv.forEach(function (val) {
     // Real Weather data
     if (val === '-t') {
         mode = val;
     }
     // Bootstrap
     if (val === '-b') {
+        var http = require('http');
+        var fs = require('fs');
         bs = true;
 
         // Security Object
@@ -35,14 +33,7 @@ process.argv.forEach(function (val, index, array) {
         so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
         // Server Object
-        so.init(1, 1, {
-          0: 1,
-          1: cnode.lifetime,
-          2: cnode._config.defaultMinPeriod,
-          3: cnode._config.defaultMaxPeriod,
-          6: false,
-          7: 'U'
-        });
+        so.init(1, 1, {0: 1, 1: cnode.lifetime, 2: cnode._config.defaultMinPeriod, 3: cnode._config.defaultMaxPeriod, 6: false, 7: 'U'});
 
         // Send bootstrap information to BS Server
         var options = {
@@ -68,23 +59,21 @@ process.argv.forEach(function (val, index, array) {
         req.on('error', (e) => {
           console.log(`problem with request: ${e.message}`);
         });
-
         stream.pipe(req);
     }
 });
-
 
 // Init LWM2M objects
 
 // Server Object
 so.init(1, 0, {
-  0: 0,                                                    // ServerID
-  1: cnode.lifetime,                                       // Lifetime
+  0: 0,                                                                         // ServerID
+  1: cnode.lifetime,                                                            // Lifetime
   2: cnode._config.defaultMinPeriod,
   3: cnode._config.defaultMaxPeriod,
   6: false,
   7: 'U',
-  8: {                                                    // Update
+  8: {                                                                          // Update
     exec: function(attrs, cb) {
       update(attrs);
       cb(null);
@@ -94,28 +83,22 @@ so.init(1, 0, {
 
 // Device Object
 so.init(3, 0, {
-  0: 'Manu',              		                     // Manufactorer name
-  1: getRandomInt(1, 100).toString(),              // Model number
-  4: {
-    exec: function(cb) {                             // Reboot
-      reboot();
-      cb(null);
-    }
-  },
-  5: {                                               // Reset
+  0: 'Manu',              		                                                  // Manufactorer name
+  1: getRandomInt(1, 100).toString(),                                           // Model number
+  5: {                                                                          // Reset
     exec: function(cb) {
       reset();
       cb(null);
     }
   },
-  16: 'U'                                           // Binding mode
+  16: 'U'                                                                       // Binding mode
 });
 
 // Location Object
 so.init(6, 0, {
-  0: latitude,                                      // Latitude
-  1: longitude,                                      // Longitude
-  5: Math.floor(Date.now() / 1000)                  // Timestamp
+  0: latitude,                                                                  // Latitude
+  1: longitude,                                                                 // Longitude
+  5: Math.floor(Date.now() / 1000)                                              // Timestamp
 });
 
 // Connection Monitoring
@@ -129,10 +112,8 @@ so.init(4, 0, {
 
 // Temperature sensor
 var temperature = [];
-var list = [];
-var heating = false;
-so.init(3303, 0, {
-    5700: {                                               // Sensor value
+so.init(3303, 0, {                                                              // Sensor value
+    5700: {
       read: function (cb) {
         if (status === true) {
           weather.defaults ({units:'metric', lang:'en', mode:'json'});
@@ -143,65 +124,57 @@ so.init(3303, 0, {
               var temp = Number(json.main['temp']);
               temperature.push(temp);
 
-              so.read('3308','0','5900', function(err,value) {
-                if (temp < value && Boolean(heating) === false) {
-                  cnode.multicast('/3306/0/5850', 'PUT', 1, function(err, rsp) {
-                    if (err) {
-                      console.log(err);
-                    }
-                    heating = true;
-                  });
-                } else if (temp >= value && Boolean(heating) === true){
-                  cnode.multicast('/3306/0/5850', 'PUT', 0, function(err, rsp) {
-                    if (err) {
-                      console.log(err);
-                    }
-                    heating = false;
-                  });
-                }
-              });
-
+              var limit = so.get('3308', 0, '5900');
+              if (temp < limit) {
+                cnode.multicast('/3306/0/5850', 'PUT', 1, function(err, rsp) {
+                  if (err) {
+                    console.log(err);
+                  }
+                });
+              } else if (temp >= limit) {
+                cnode.multicast('/3306/0/5850', 'PUT', 0, function(err, rsp) {
+                  if (err) {
+                    console.log(err);
+                  }
+                });
+              }
               cb(null, temp);
             }
           });
         } else {
             var temp = getRandomArbitrary(0, 30);
-            //var rounded = Math.round(temp*10) / 10;
             temperature.push(temp);
 
-            so.read('3308','0','5900', function(err,value) {
-              if (temp < value && Boolean(heating) === false) {
-                cnode.multicast('/3306/0/5850', 'PUT', 'true', function(err, rsp) {
-                  if (err) {
-                    console.log(err);
-                  }
-                  heating = true;
-                });
-              } else if (temp >= value && Boolean(heating) === true){
-                cnode.multicast('/3306/0/5850', 'PUT', 'false', function(err, rsp) {
-                  if (err) {
-                    console.log(err);
-                  }
-                  heating = false;
-                });
-              }
-            });
+            var limit = so.get('3308', 0, '5900');
+            if (temp < limit) {
+              cnode.multicast('/3306/0/5850', 'PUT', 'true', function(err, rsp) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            } else if (temp >= limit) {
+              cnode.multicast('/3306/0/5850', 'PUT', 'false', function(err, rsp) {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            }
             cb(null, temp);
         }
       }
     },
-    5701: 'Cel',                                         // Unit
-    5601: {                                              // Min measured value
+    5701: 'Cel',                                                                // Unit
+    5601: {                                                                     // Min measured value
       read: function(cb) {
         if (temperature.length > 0) {
           var min = Math.min.apply(null, temperature);
-          cb(null,min);
+          cb(null, min);
         } else {
           cb('4.05');
         }
       }
     },
-    5602: {                                             // Max measured value
+    5602: {                                                                     // Max measured value
       read: function(cb) {
         if (temperature.length > 0) {
           var max = Math.max.apply(null, temperature);
@@ -211,9 +184,9 @@ so.init(3303, 0, {
         }
       }
     },
-    5603: 1.1,                                        // Min range measured value
-    5604: 29.9,                                         // Max range measured value
-    5605: {                                             // Reset
+    5603: 1.1,                                                                  // Min range measured value
+    5604: 29.9,                                                                 // Max range measured value
+    5605: {                                                                     // Reset
       exec: function(cb) {
         if (temperature.length > 0) {
           var value = temperature[temperature.length-1];
@@ -230,7 +203,7 @@ so.init(3303, 0, {
 // Humidity Sensor
 var humidity = [];
 so.init(3304, 0, {
-  5700: {                                               // Sensor value
+  5700: {                                                                       // Sensor value
     read: function (cb) {
       if (status === true) {
         weather.defaults ({units:'metric', lang:'en', mode:'json'});
@@ -245,15 +218,13 @@ so.init(3304, 0, {
         });
       } else {
             var humi = getRandomArbitrary(0, 100);
-            //var rounded = Math.round(humi*10) / 10;
             humidity.push(humi);
             cb(null, humi);
-
       }
     }
   },
-  5701: '%',                                         // Unit
-  5601: {                                            // Min measured value
+  5701: '%',                                                                    // Unit
+  5601: {                                                                       // Min measured value
     read: function(cb) {
       if (humidity.length > 0) {
         var min = Math.min.apply(null, humidity);
@@ -263,7 +234,7 @@ so.init(3304, 0, {
       }
     }
   },
-  5602: {                                             // Max measured value
+  5602: {                                                                       // Max measured value
     read: function(cb) {
       if (humidity.length > 0) {
         var max = Math.max.apply(null, humidity);
@@ -273,9 +244,9 @@ so.init(3304, 0, {
       }
     }
   },
-  5603: 1.1,                                          // Min range measured value
-  5604: 99.9,                                        // Max range measured value
-  5605: {                                             // Reset
+  5603: 1.1,                                                                    // Min range measured value
+  5604: 99.9,                                                                   // Max range measured value
+  5605: {                                                                       // Factory Reset
     exec: function(cb) {
       if (humidity.length > 0) {
         var value = humidity[humidity.length-1];
@@ -291,7 +262,7 @@ so.init(3304, 0, {
 
 // Set point
 var point = 15.2;
-var application = 'test';
+var application = 'Temperature limit';
 so.init(3308, 0, {
   5900: point,
   5701: 'Cel',
@@ -300,21 +271,6 @@ so.init(3308, 0, {
 
 
 // Exec Functions
-
-// Reboot
-function reboot() {
-  cnode.deregister(function (err, rsp) {
-      if (err) {
-        console.log(err);
-      } else {
-        cnode.register(ip, 5683, function (err, rsp) {
-          if (err) {
-            console.log(err);
-          }
-        });
-      }
-  });
-};
 
 // Update
 function update(attrs) {
@@ -335,13 +291,14 @@ function reset(callback) {
 
     // Delete all extra object instances
     var obj = cnode.getSmartObject();
+
+    // Delete all extra object instances
+    var obj = cnode.getSmartObject();
     for (var i=0, item; item = obj.objectList()[i]; i++) {
-        for (var j=1, iid; iid = item.iid[j]; j++) {
-            var oid = cutils.oidKey(item.oid);
-            delete obj[oid][iid];
+        for (var j=1; item.iid[j]; j++) {
+            cnode.deleteInst(item.oid, item.iid[j]);
         }
     }
-
     //De-register
     cnode.register(ip, 5683, function (err, rsp) {
         if (err) {

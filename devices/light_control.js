@@ -1,10 +1,6 @@
 var CoapNode = require('./lib/coap-node.js');
 var SmartObject = require('smartobject');
-var config = require('./lib/config');
 var shortid = require('shortid');
-var cutils = require('./lib/components/cutils');
-var http = require('http');
-var fs = require('fs');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -12,15 +8,14 @@ var cnode = new CoapNode('LightController'+'_'+ID, so);
 
 // Config parameters
 var ip = process.argv[2],
-    bs = false,
-    status = false,
-    latitude = (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),
-    longitude = (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString();
+    bs = false;
 
 // Command line arguments
 process.argv.forEach(function (val, index, array) {
     // Bootstrap
     if (val === '-b') {
+        var http = require('http');
+        var fs = require('fs');
         bs = true;
 
         // Security Object
@@ -28,14 +23,7 @@ process.argv.forEach(function (val, index, array) {
         so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
         // Server Object
-        so.init(1, 1, {
-          0: 1,
-          1: cnode.lifetime,
-          2: cnode._config.defaultMinPeriod,
-          3: cnode._config.defaultMaxPeriod,
-          6: false,
-          7: 'U'
-        });
+        so.init(1, 1, {0: 1, 1: cnode.lifetime, 2: cnode._config.defaultMinPeriod, 3: cnode._config.defaultMaxPeriod, 6: false, 7: 'U'});
 
         // Send bootstrap information to BS Server
         var options = {
@@ -61,7 +49,7 @@ process.argv.forEach(function (val, index, array) {
         req.on('error', (e) => {
           console.log(`problem with request: ${e.message}`);
         });
-        
+
         stream.pipe(req);
     }
 });
@@ -70,13 +58,13 @@ process.argv.forEach(function (val, index, array) {
 
 // Server Object
 so.init(1, 0, {
-  0: 0,                                                    // ServerID
-  1: cnode.lifetime,                                       // Lifetime
+  0: 0,                                                                         // ServerID
+  1: cnode.lifetime,                                                            // Lifetime
   2: cnode._config.defaultMinPeriod,
   3: cnode._config.defaultMaxPeriod,
   6: false,
   7: 'U',
-  8: {                                                    // Update
+  8: {                                                                          // Update
     exec: function(attrs, cb) {
       update(attrs);
       cb(null)
@@ -86,28 +74,22 @@ so.init(1, 0, {
 
 // Device Object
 so.init(3, 0, {
-  0: 'Manu',              		                     // Manufactorer name
-  1: getRandomInt(1, 100).toString(),              // Model number
-  4: {
-    exec: function(cb) {                             // Reboot
-      reboot();
-      cb(null);
-    }
-  },
-  5: {                                               // Reset
+  0: 'Manu',              		                                                  // Manufactorer name
+  1: getRandomInt(1, 100).toString(),                                           // Model number
+  5: {                                                                          // Reset
     exec: function(cb) {
       reset();
       cb(null);
     }
   },
-  16: 'U'                                           // Binding mode
+  16: 'U'                                                                       // Binding mode
 });
 
 // Location Object
 so.init(6, 0, {
-  0: latitude,                                      // Latitude
-  1: longitude,                                      // Longitude
-  5: Math.floor(Date.now() / 1000)                  // Timestamp
+  0: (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),             // Latitude
+  1: (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString(),           // Longitude
+  5: Math.floor(Date.now() / 1000)                                              // Timestamp
 });
 
 // Connection Monitoring
@@ -119,11 +101,12 @@ so.init(4, 0, {
 // Init IPSO objects
 
 // Light Conrtol
-var control = false;
-var dim = [100];
-var start;
+var control = false,
+    dim,
+    start;
+
 so.init(3311, 0, {
-    5850: {                                 // On/Off
+    5850: {                                                                     // On/Off
       read: function (cb) {
         cb(null, control);
       },
@@ -138,18 +121,9 @@ so.init(3311, 0, {
         cb(null, val);
       }
     },
-    5851: {                                // Dimmer
-      read: function(cb) {
-        var val = dim[dim.length-1];
-        cb(null, val);
-      },
-      write: function (val,cb) {
-        dim.push(val);
-        cb(null, val);
-      }
-    },
-    5701: 'Cel',                           // Unit
-    5852: {                                // On time
+    5851: dim || 100,                                                           // Dimmer
+    5701: 'Cel',                                                                // Unit
+    5852: {                                                                     // On time
       read: function(cb) {
         if (Boolean(control) === true) {
           var end = Math.round((new Date() - start) / 1000);
@@ -184,10 +158,8 @@ function reboot() {
               if (err) {
                 console.log(err);
               }
-              console.log(rsp);
           });
         }
-        console.log(rsp);
   });
 };
 
@@ -211,13 +183,12 @@ function reset() {
     // Delete all extra object instances
     var obj = cnode.getSmartObject();
     for (var i=0, item; item = obj.objectList()[i]; i++) {
-        for (var j=1, iid; iid = item.iid[j]; j++) {
-            var oid = cutils.oidKey(item.oid);
-            delete obj[oid][iid];
+        for (var j=1; item.iid[j]; j++) {
+            cnode.deleteInst(item.oid, item.iid[j]);
         }
     }
 
-    //De-register
+    //Re-register
     cnode.register(ip, 5683, function (err, rsp) {
         if (err) {
           console.log(err);
@@ -316,9 +287,8 @@ cnode.on('bootstrapped', function () {
 
 // No BS server
 if (bs === false) {
-    // Security Object
-    so.init(0, 0, { 0: 'coap://' + ip + ':5683', 1: false, 2: 3});
 
+    so.init(0, 0, { 0: 'coap://' + ip + ':5683', 1: false, 2: 3});
     // Register
     cnode.register(ip, 5683, function (err, rsp) {
         if (err) {
