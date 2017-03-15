@@ -1,23 +1,20 @@
 FROM mhart/alpine-node-auto
 
-# Create app directory
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
 # Install app dependencies
-COPY package.json /usr/src/app/
-RUN npm install
+ADD package.json /tmp/package.json
+RUN cd /tmp && npm install
 
-# Bundle app source
-COPY . ./devices /usr/src/app/
+# Create app directory
+RUN mkdir -p /src/app && cp -a /tmp/node_modules /src/app/
+WORKDIR /src/app
+ADD . /src/app
+ADD . ./devices /src/app/
 
 # Application's default ports
 EXPOSE 5683
 
 ENV FILE $FILE
 CMD node $FILE
-
-
 
 
 

@@ -1,5 +1,5 @@
 
-var CoapNode = require('./index.js');
+var CoapNode = require('coap-node');
 var SmartObject = require('smartobject');
 var weather = require('openweathermap');
 var shortid = require('shortid');
@@ -29,7 +29,7 @@ process.argv.forEach(function (val) {
         bs = true;
 
         // Security Object
-        so.init(0, 0, {0: 'coap://172.17.0.3:5683', 1: true, 2: 3});
+        so.init(0, 0, {0: 'coap://'+ip+':5683', 1: true, 2: 3});
         so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
         // Server Object
@@ -326,12 +326,16 @@ function find(mode) {
   if (mode === '-t')  {
     weather.defaults ({units:'metric', lang:'en', mode:'json'});
     weather.now ({lat:latitude, lon:longitude, APPID:'a7a67efb8526ba99aeb2b8f0d63cc18a'},function(err, json) {
-      console.log('Weather station: ' + json.name + ', ' + json.sys['country']);
-      latitude = json.coord['lat'].toString();
-      longitude = json.coord['lon'].toString();
-      status = true;
-      cnode.city = json.name;
-      });
+        latitude = json.coord['lat'].toString();
+        longitude = json.coord['lon'].toString();
+        status = true;
+
+        if (json.name != '')
+            console.log('Weather station: ' + json.name + ', ' + json.sys['country']);
+        else
+            console.log('No real sensor found. Sensor with random data');
+    });
+
   } else {
     console.log('Sensor with random data');
   }

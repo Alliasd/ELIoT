@@ -1,5 +1,5 @@
 
-var CoapNode = require('./index.js');
+var CoapNode = require('coap-node');
 var SmartObject = require('smartobject');
 var shortid = require('shortid');
 
@@ -20,7 +20,7 @@ process.argv.forEach(function (val, index, array) {
         bs = true;
 
         // Security Object
-        so.init(0, 0, {0: 'coap://172.17.0.3:5683', 1: true, 2: 3});
+        so.init(0, 0, {0: 'coap://'+ip+':5683', 1: true, 2: 3});
         so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
         // Server Object

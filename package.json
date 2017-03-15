@@ -1,37 +1,24 @@
 {
-  "name": "coap-node",
-  "version": "0.1.6",
-  "description": "Client node of lightweight M2M (LWM2M).",
-  "main": "index.js",
+  "name": "eliot",
+  "version": "0.0.0",
+  "description": "Emulated IoT platform based on coap-node and leshan",
   "dependencies": {
-    "busyman": "^0.3.0",
-    "coap": "^0.17.0",
-    "debug": "^2.2.0",
-    "lwm2m-id": "^1.6.1",
-    "network": "^0.2.1",
-    "smartobject": "^1.4.0",
+    "coap-node": "https://github.com/Alliasd/coap-node/tarball/master",
     "openweathermap": "^1.0.0",
     "shortid": "^2.2.6"
   },
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "coap-shepherd": "^0.1.8",
-    "mocha": "^2.5.3"
-  },
-  "scripts": {
-    "test": "make test-all"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/PeterEB/coap-node.git"
+    "url": "https://github.com/Alliasd/ELIOT.git"
   },
   "keywords": [
-    "coap"
+    "coap", "lwm2m", "leshan", "eliot"
   ],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/PeterEB/coap-node/issues"
+    "url": "https://github.com/Alliasd/ELIOT/issues"
   },
-  "homepage": "https://github.com/PeterEB/coap-node"
+  "homepage": "https://github.com/Alliasd/ELIOT"
 }
+

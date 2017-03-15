@@ -88,14 +88,14 @@ PresenceDetector | presence.js
 
 2. Run the Server:
 
-  **Server:** `docker run --rm -ti --name leshan-server corfr/leshan `
+  **Server:** `docker run --rm -ti --name ms corfr/leshan `
 
-  **Bootstrap Server:** `docker run --rm -ti --name leshan-bootstrap --link leshan-server corfr/leshan bootstrap`
+  **Bootstrap Server:** `docker run --rm -ti --name bss --link ms corfr/leshan bootstrap`
 
   Example output of running the LWM2M Server:
 
   ```
-  $ docker run --rm -ti --name leshan-server corfr/leshan
+  $ docker run --rm -ti --name ms corfr/leshan
   + SERVICE=server
   + java -jar ./leshan-server-demo.jar
   Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.config.NetworkConfig createStandardWithFile
@@ -123,13 +123,11 @@ PresenceDetector | presence.js
 
   `docker build -t <image_name> .`
 
-2. Check the correct LWM2M Server/Bootstrap Server address with the following command and copy it.
+2. Run the clients by specifying the correct javascript file, LWM2M Server/Bootstrap Server name (ms/bss) and optional parameters.
 
-  `docker inspect --format '{{ .NetworkSettings.IPAddress }}' leshan-server  leshan-bootstrap`
+  **Server**: `docker run -it -e FILE="<jsfile_name> ms [OPTIONS]" --link ms <image_name>`
 
-3. Run the clients by specifying the correct javascript file, LWM2M Server/Bootstrap Server address and optional parameters.
-
-  `docker run -e FILE="<jsfile_name> <SERVER_IP> [OPTIONS]" -it <image_name>`
+  **Bootstrap Server**: `docker run -it -e FILE="<jsfile_name> bss [OPTIONS]" --link bss --link ms <image_name>`
   ```
   Options:
   -b          Bootstrap mode
@@ -138,12 +136,12 @@ PresenceDetector | presence.js
 
   Example output:
   ```
-  $ docker run -e FILE="weather.js 172.17.0.3 -b" -it alliasd/eliot
+  $ docker run -it -e FILE="weather.js bss -b" alliasd/eliot
   bootstrapped
   Sensor with random data
   registered
   ```
-
+ **Note**: instead of using the name ms/bss you can use the IP address without the --link flags.
 #### Set up Docker-compose
 
 Docker-compose uses ".env" and "docker-compose.yml" files to configure the clients with the correct javascript files and IP addresses. You can modify the files, if you want to add new devices (services).

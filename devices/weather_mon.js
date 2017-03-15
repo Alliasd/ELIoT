@@ -8,7 +8,7 @@ var shortid = require('shortid');
 
 var so = new SmartObject;
 var ID = shortid.generate();
-var cnode = new CoapNode('Weather'+'_'+ID, so);
+var cnode = new CoapNode('Weather', so);
 
 //LWM2M Server ip
 var ip = process.argv[2];
@@ -141,7 +141,7 @@ so.init(3304, 0, {
       }
     }
   },
-  5603: "0",                                          // Min range measured value
+  5603: 0,                                          // Min range measured value
   5604: 100.0,                                        // Max range measured value
   5605: {                                             // Reset
     exec: function(cb) {
@@ -159,14 +159,15 @@ so.init(3304, 0, {
 
 // Security Object
 so.init(0, 0, {
-  1: false,
+  0: "coap://172.17.0.3:5683/",
+  1: true,
   2: 3
 });
 
 // Server Object
 var min, max;
 so.init(1, 0, {
-  0: 0                      ,                           // ServerID
+  0: 0,                                                // ServerID
   1: {                                                 // Lifetime
     read: function(cb) {
       cb(null, cnode.lifetime);
@@ -357,7 +358,7 @@ cnode.on('error', function(err, rsp) {
     //console.log(rsp);
 });
 
-// Multicast closed
+// Multicast
 cnode.on('multicast', function() {
   //console.log('multicast');
 });
@@ -373,10 +374,19 @@ cnode.on('deregistered', function () {
 });
 
 
+// Bootstrap
+cnode.bootstrap(ip, 5683, function (err, rsp) {
+    if (err) {
+      console.log(err);
+    }
+    //console.log(rsp);
+});
+
+/*
 // Register
 cnode.register(ip, 5683, function (err, rsp) {
     if (err) {
       console.log(err);
     }
     //console.log(rsp);
-});
+});*/

@@ -8,7 +8,7 @@
     },
     "security": {
         "1": {
-            "uri": "coap://172.17.0.2:5683/",
+            "uri": "coap://ms:5683/",
             "bootstrapServer": false,
             "securityMode": "NO_SEC",            
             "serverId": "1"
