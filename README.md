@@ -19,13 +19,14 @@ The Emulated IoT (ELIOT) platform enables emulating simple IoT devices on Docker
 
 
 Bootstrap | Register   | Device Management & Service Enablement | Information Reporting
---------- | ---------- | ----------------------------------- | ----------
-Bootstrap | Register   | Read (Text/JSON/TLV)          | Observe (Text/JSON/TLV)
-          | Update     | Write (Text/JSON/TLV)         | Notify (Text/JSON/TLV)
-          | Deregister | Create (JSON/TLV)             | Cancel
+--------- | ---------- | -------------------------------------- | ----------
+Bootstrap | Register   | Read (Text/JSON/TLV)                   | Observe (Text/JSON/TLV)
+          | Update     | Write (Text/JSON/TLV)                  | Notify (Text/JSON/TLV)
+          | Deregister | Create (JSON/TLV)                      | Cancel
           |            | Execute
           |            | Delete
           |            | Write attributes
+
 
 
 **The module still has the following limitations:**
