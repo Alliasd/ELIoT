@@ -1,15 +1,14 @@
 Code:
-  ☐ Check the smallest docker container possible. Perhaps removing unused libraries.
-  ☐ Simplify installation by adding modified docker image to repo.
+  ✔ Check the smallest docker container possible. Perhaps removing unused libraries.
+  ✔ Simplify installation by adding modified docker image to repo.
   ☐ Add README for Mac and Vagrant.
-  ☐ Tutorial when running simulation.
+  ✔ Tutorial when running simulation.
   ☐ Captions of simulation running.
   ☐ Are we elligible to http://www.f-interop.eu/index.php/open-call ?? @due(2017-01-22 16:05)
 
 Paper:
   ✘ Paper deadline @due(2017-01-20 16:05). @cancelled(2017-01-24 15:55) @project(Paper)
   ☐ Enhanced paper towards conf/journal publication.
-  ☐ 
   ✔ Ref to Github Repo on paper. @done(2017-01-24 15:55) @project(Paper)
   ✔ Update changes from Roberto. @done(2017-01-24 15:55) @project(Paper)
   ✔ Improve layout of graphs. @done(2017-01-24 15:55) @project(Paper)
