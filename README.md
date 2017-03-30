@@ -85,50 +85,50 @@ PresenceDetector | presence.js
 
 1. Pull the Leshan image with the command:
 
-  `docker pull corfr/leshan`
+   `docker pull corfr/leshan`
 
 2. Run the Server:
 
-  **Server:** `docker run --rm -ti --name ms corfr/leshan `
+   **Server:** `docker run --rm -ti --name ms corfr/leshan `
 
-  **Bootstrap Server:** `docker run --rm -ti --name bss --link ms corfr/leshan bootstrap`
+   **Bootstrap Server:** `docker run --rm -ti --name bss --link ms corfr/leshan bootstrap`
 
-  Example output of running the LWM2M Server:
+   Example output of running the LWM2M Server:
 
-  ```
-  $ docker run --rm -ti --name ms corfr/leshan
-  + SERVICE=server
-  + java -jar ./leshan-server-demo.jar
-  Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.config.NetworkConfig createStandardWithFile
-  INFO: Storing standard properties in file Californium.properties
-  Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.CoapServer start
-  INFO: Starting server
-  Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.CoapEndpoint start
-  INFO: Starting endpoint at 0.0.0.0/0.0.0.0:5683
-  Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.CoapEndpoint start
-  INFO: Starting endpoint at 0.0.0.0/0.0.0.0:5684
-  Feb 23, 2017 9:57:02 AM org.eclipse.californium.scandium.DTLSConnector start
-  INFO: DTLS connector listening on [0.0.0.0/0.0.0.0:5684] with MTU [1,280] using (inbound) datagram buffer size [16,474 bytes]
-  2017-02-23 09:57:02,124 INFO LeshanServer - LWM2M server started at coap://0.0.0.0/0.0.0.0:5683, coaps://0.0.0.0/0.0.0.0:5684.
-  2017-02-23 09:57:02,214 INFO LeshanServerDemo - Web server started at http://172.17.0.2:8080/.
+    ```
+    $ docker run --rm -ti --name ms corfr/leshan
+    + SERVICE=server
+    + java -jar ./leshan-server-demo.jar
+    Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.config.NetworkConfig createStandardWithFile
+    INFO: Storing standard properties in file Californium.properties
+    Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.CoapServer start
+    INFO: Starting server
+    Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.CoapEndpoint start
+    INFO: Starting endpoint at 0.0.0.0/0.0.0.0:5683
+    Feb 23, 2017 9:57:02 AM org.eclipse.californium.core.network.CoapEndpoint start
+    INFO: Starting endpoint at 0.0.0.0/0.0.0.0:5684
+    Feb 23, 2017 9:57:02 AM org.eclipse.californium.scandium.DTLSConnector start
+    INFO: DTLS connector listening on [0.0.0.0/0.0.0.0:5684] with MTU [1,280] using (inbound) datagram buffer size [16,474 bytes]
+    2017-02-23 09:57:02,124 INFO LeshanServer - LWM2M server started at coap://0.0.0.0/0.0.0.0:5683, coaps://0.0.0.0/0.0.0.0:5684.
+    2017-02-23 09:57:02,214 INFO LeshanServerDemo - Web server started at http://172.17.0.2:8080/.
 
-  ```
+    ```
 
 #### Set up the LWM2M Clients (devices)
 
 1. Pull the Eliot image for the devices with the command:
 
-  `docker pull alliasd/eliot`
+   `docker pull alliasd/eliot`
 
-  Or build the image from the Dockerfile with the command:
+   Or build the image from the Dockerfile with the command:
 
-  `docker build -t <image_name> .`
+   `docker build -t <image_name> .`
 
 2. Run the clients by specifying the correct javascript file, LWM2M Server/Bootstrap Server name (ms/bss) and optional parameters.
 
-  **Server**: `docker run -it -e FILE="<jsfile_name> ms [OPTIONS]" --link ms <image_name>`
+   **Server**: `docker run -it --link ms <image_name> <jsfile_name> ms [OPTIONS]`
 
-  **Bootstrap Server**: `docker run -it -e FILE="<jsfile_name> bss [OPTIONS]" --link bss --link ms <image_name>`
+   **Bootstrap Server**: `docker run -it --link bss --link ms <image_name> <jsfile_name> bss [OPTIONS]`
   ```
   Options:
   -b          Bootstrap mode
@@ -137,27 +137,28 @@ PresenceDetector | presence.js
 
   Example output:
   ```
-  $ docker run -it -e FILE="weather.js bss -b" alliasd/eliot
+  $ docker run -it alliasd/eliot weather.js bss -b
   bootstrapped
   Sensor with random data
   registered
   ```
  **Note**: instead of using the name ms/bss you can use the IP address without the --link flags.
+
 #### Set up Docker-compose
 
-Docker-compose uses ".env" and "docker-compose.yml" files to configure the clients with the correct javascript files and IP addresses. You can modify the files, if you want to add new devices (services).
+Docker-compose uses "docker-compose.yml" file to configure the clients with the correct javascript files and IP addresses. You can modify the file, if you want to add new devices (services).
 
 1. Build the images for docker-compose with the command:
 
-  `docker-compose build`
+   `docker-compose build`
 
 2. Run the clients and server with the following command:
 
-  `docker-compose up`
+   `docker-compose up`
 
 3. If you want to scale up the amount of devices, you can use the scaling option with the following command:
 
-  `docker-compose scale weather=X presence=X radiator=X light=X`
+   `docker-compose scale weather=X presence=X radiator=X light=X`
 
 ## Multi-host environment with Swarm
 
@@ -180,70 +181,70 @@ If you want to have multiple nodes on the **Linux** host, spin up virtual machin
 
 `docker-machine create -d <driver> <node_name>`
 
-If you are using Windows, follow these steps:
+If you are using **Windows**, follow these steps:
 
 1. Create a machine with the following command and use the Hyper-V driver and the virtual switch created before:
 
-  `docker-machine create -d hyperv --hyperv-virtual-switch <switch_name> <node_name>`
+   `docker-machine create -d hyperv --hyperv-virtual-switch <switch_name> <node_name>`
 
-  Example of creating a machine called my-vm:
-  ```
-  PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch my-vmswitch my-vm
-  Running pre-create checks...
-  Creating machine...
-  (my-vm) Copying C:\Users\Alli\.docker\machine\cache\boot2docker.iso to C:\Users\Alli\.docker\machine\machines\my-vm\boot2docker.iso...
-  (my-vm) Creating SSH key...
-  (my-vm) Creating VM...
-  (my-vm) Using switch "my-vmswitch"
-  (my-vm) Creating VHD
-  (my-vm) Starting VM...
-  (my-vm) Waiting for host to start...
-  Waiting for machine to be running, this may take a few minutes...
-  Detecting operating system of created instance...
-  Waiting for SSH to be available...
-  Detecting the provisioner...
-  Provisioning with boot2docker...
-  Copying certs to the local machine directory...
-  Copying certs to the remote machine...
-  Setting Docker configuration on the remote daemon...
-  Checking connection to Docker...
-  Docker is up and running!
-  To see how to connect your Docker Client to the Docker Engine running on this virtual machine, run: C:\Program Files\Docker\Docker\Resources\bin\
-  docker-machine.exe env my-vm
-  ```
+   Example of creating a machine called my-vm:
+    ```
+    PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch my-vmswitch my-vm
+    Running pre-create checks...
+    Creating machine...
+    (my-vm) Copying C:\Users\Alli\.docker\machine\cache\boot2docker.iso to C:\Users\Alli\.docker\machine\machines\my-vm\boot2docker.iso...
+    (my-vm) Creating SSH key...
+    (my-vm) Creating VM...
+    (my-vm) Using switch "my-vmswitch"
+    (my-vm) Creating VHD
+    (my-vm) Starting VM...
+    (my-vm) Waiting for host to start...
+    Waiting for machine to be running, this may take a few minutes...
+    Detecting operating system of created instance...
+    Waiting for SSH to be available...
+    Detecting the provisioner...
+    Provisioning with boot2docker...
+    Copying certs to the local machine directory...
+    Copying certs to the remote machine...
+    Setting Docker configuration on the remote daemon...
+    Checking connection to Docker...
+    Docker is up and running!
+    To see how to connect your Docker Client to the Docker Engine running on this virtual machine, run: C:\Program Files\Docker\Docker\Resources\bin\
+    docker-machine.exe env my-vm
+    ```
 2. Get the environment commands for your new VM. This is done with the following command:
 
-  `docker-machine env <node_name>`
+   `docker-machine env <node_name>`
 
-  Example of the output:
-  ```
-  PS C:\WINDOWS\system32> docker-machine env my-vm
-  $Env:DOCKER_TLS_VERIFY = "1"
-  $Env:DOCKER_HOST = "tcp://192.168.43.149:2376"
-  $Env:DOCKER_CERT_PATH = "C:\Users\Alli\.docker\machine\machines\my-vm"
-  $Env:DOCKER_MACHINE_NAME = "my-vm"
-  $Env:COMPOSE_CONVERT_WINDOWS_PATHS = "true"
-  # Run this command to configure your shell:
-  # & "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env my-vm | Invoke-Expression
-  ```
+    Example of the output:
+    ```
+    PS C:\WINDOWS\system32> docker-machine env my-vm
+    $Env:DOCKER_TLS_VERIFY = "1"
+    $Env:DOCKER_HOST = "tcp://192.168.43.149:2376"
+    $Env:DOCKER_CERT_PATH = "C:\Users\Alli\.docker\machine\machines\my-vm"
+    $Env:DOCKER_MACHINE_NAME = "my-vm"
+    $Env:COMPOSE_CONVERT_WINDOWS_PATHS = "true"
+    # Run this command to configure your shell:
+    # & "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env my-vm | Invoke-Expression
+    ```
 
 3. Connect your shell to the new machine.
 
-  `& "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env my-vm | Invoke-Expression`
+   `& "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env my-vm | Invoke-Expression`
 
 4. Repeat the previous steps to create multiple machines.
 
-  **Note:** if Toolbox is used, just define the driver as virtualbox and give a name for the machine. Docker machine named "default" should already exist.
+   **Note:** if Toolbox is used, just define the driver as virtualbox and give a name for the machine. Docker machine named "default" should already exist.
 
 #### Get the IP address for the manager node
 
   1. Connect to your manager node with ssh:
 
-      `docker-machine ssh <node_name>`
+     `docker-machine ssh <node_name>`
 
-  2. **Linux**: Check the available network interfaces with ifconfig and the correct IP address.
+  2. **Linux**: Check the available network interfaces with ifconfig and   the correct IP address.
 
-    **Windows**: The IP address of the docker-machine can be retrieved with the `docker-machine ip <node_name>` command.
+  **Windows**: The IP address of the docker-machine can be retrieved with the `docker-machine ip <node_name>` command.
 
 #### Create a swarm
 
@@ -262,23 +263,23 @@ If you are using Windows, follow these steps:
         --token SWMTKN-1-2kmjs07xlbg0ssm983lsk5omupgfci6z2epmtvq6iqgbssyxt8-57zc17uyat7yu2yx7acbg5s9h \
         192.168.10.63:2377
 
-    To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
-    ```
+     To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+     ```
 
   2. Add worker nodes to the swarm. Run the command produced by the previous step on the worker machines to join the swarm:
-    ```
-    $ docker swarm join \
-      --token  SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
-      192.168.99.100:2377
+      ```
+      $ docker swarm join \
+        --token  SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
+        192.168.99.100:2377
 
-    This node joined a swarm as a worker.
-    ```
+      This node joined a swarm as a worker.
+      ```
 
 #### Create an overlay network
 
   Create an overlay network to be able to attach multiple services to the same network with the following command:
 
-   `docker network create -d overlay --subnet <subnet> <network_name>`
+  `docker network create -d overlay --subnet <subnet> <network_name>`
 
 #### Add service
 
