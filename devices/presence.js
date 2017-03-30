@@ -113,18 +113,18 @@ so.init(3302,0, {
       if (val === 'true' && Boolean(state) === false) {
           state = true;
           counter += 1;
-          cnode.multicast('/3311/0/5850', 'PUT', '1', function(err, rsp) {
+          /*cnode.multicast('/3311/0/5850', 'PUT', '1', function(err, rsp) {
             if (err) {
               console.log(err);
             }
-          });
+          });*/
       } else if (val === 'false' && Boolean(state) === true) {
           state = false;
-          cnode.multicast('/3311/0/5850', 'PUT', '0', function(err, rsp) {
+          /*cnode.multicast('/3311/0/5850', 'PUT', '0', function(err, rsp) {
             if (err) {
               console.log(err);
             }
-          });
+          });*/
       }
       cb(null, state);
     }

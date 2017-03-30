@@ -124,7 +124,7 @@ so.init(3303, 0, {                                                              
               var temp = Number(json.main['temp']);
               temperature.push(temp);
 
-              var limit = so.get('3308', 0, '5900');
+              /*var limit = so.get('3308', 0, '5900');
               if (temp < limit) {
                 cnode.multicast('/3306/0/5850', 'PUT', 1, function(err, rsp) {
                   if (err) {
@@ -137,7 +137,7 @@ so.init(3303, 0, {                                                              
                     console.log(err);
                   }
                 });
-              }
+              }*/
               cb(null, temp);
             }
           });
@@ -145,7 +145,7 @@ so.init(3303, 0, {                                                              
             var temp = getRandomArbitrary(0, 30);
             temperature.push(temp);
 
-            var limit = so.get('3308', 0, '5900');
+            /*var limit = so.get('3308', 0, '5900');
             if (temp < limit) {
               cnode.multicast('/3306/0/5850', 'PUT', 'true', function(err, rsp) {
                 if (err) {
@@ -158,7 +158,7 @@ so.init(3303, 0, {                                                              
                   console.log(err);
                 }
               });
-            }
+            }*/
             cb(null, temp);
         }
       }
