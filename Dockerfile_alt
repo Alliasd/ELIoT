@@ -9,10 +9,9 @@ RUN mkdir -p /src/app && cp -a /tmp/node_modules /src/app/
 WORKDIR /src/app
 ADD . /src/app
 ADD . ./devices /src/app/
+ADD ./devices/start_clients.sh /
 
 # Application's default ports
 EXPOSE 5683
 
-ENTRYPOINT [ "node" ]
-
-
+ENTRYPOINT ["/start_clients.sh"]
