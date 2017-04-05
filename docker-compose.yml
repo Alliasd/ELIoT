@@ -20,7 +20,7 @@ services:
         - bss
         - ms
     presence:
-        image: alliasd/eliot
+        image: alliasd/eliot_multi
         command: presence.js 10.0.0.4
 #        depends_on:
 #        - bss
