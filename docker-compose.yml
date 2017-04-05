@@ -21,10 +21,10 @@ services:
         - ms
     presence:
         image: alliasd/eliot
-        command: presence.js ms
-        depends_on:
-        - bss
-        - ms
+        command: presence.js 10.0.0.4
+#        depends_on:
+#        - bss
+#        - ms
     radiator:
        image: alliasd/eliot
        command: radiator.js ms
@@ -37,4 +37,3 @@ services:
        depends_on:
        - bss
        - ms
-
