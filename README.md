@@ -35,19 +35,19 @@ The Emulated IoT (ELIOT) platform enables emulating simple IoT devices on Docker
 
    `docker run -it --link bss --link ms alliasd/eliot <jsfile_name> bss [OPTIONS]`
 
-  ```
-  JS-files:
-  * presence.js
-  * weather.js
-  * light_control.js
-  * radiator.js
+   ```
+   JS-files:
+   * presence.js
+   * weather.js
+   * light_control.js
+   * radiator.js
 
-  Options:
-  -b          Bootstrap mode
-  -t          Real Weather data (only WeatherObserver)
-  ```
+   Options:
+   -b          Bootstrap mode
+   -t          Real Weather data (only WeatherObserver)
+   ```
 
- **Note**: instead of using the name ms/bss you can use the IP address without the --link flags.
+   **Note**: instead of using the name ms/bss you can use the IP address without the --link flags.
 
 4. Run multiple clients with docker-compose
 
