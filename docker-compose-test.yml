@@ -15,13 +15,13 @@ services:
 #        - 8081:8080
 #        command: bootstrap
     weather:
-        image: eliot_test
-        command: weather_mon.js 193.234.219.196
+        image: alliasd/eliot
+        command: weather.js ms
         mem_limit: 14m
         network_mode: host
-#        depends_on:
+        depends_on:
 #        - bss
-#        - ms
+        - ms
     presence:
         image: alliasd/eliot
         command: presence.js ms
@@ -40,15 +40,3 @@ services:
        depends_on:
 #       - bss
        - ms
-    test:
-       image: eliot_test
-       command: testClient2.js ms
-       mem_limit: 14m
-#       volumes:
-#       - data:/var/lib/
-       depends_on:
-#       - bss
-       - ms
-
-#volumes:
-#  data:
