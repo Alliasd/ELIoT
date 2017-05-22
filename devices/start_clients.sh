@@ -22,7 +22,7 @@ trap 'sigterm_handler' SIGTERM
 
 
 while [ $i -le $max ]; do
-  #echo 'Starting client #'$i
+  echo 'Starting client #'$i
   exec node $1 $2 &
   i=$(expr $i + 1)
 done

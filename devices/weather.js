@@ -3,6 +3,7 @@ var CoapNode = require('coap-node');
 var SmartObject = require('smartobject');
 var weather = require('openweathermap');
 var shortid = require('shortid');
+var fs = require('fs');
 
 var so = new SmartObject;
 var ID = shortid.generate();
@@ -25,7 +26,6 @@ process.argv.forEach(function (val) {
     // Bootstrap
     if (val === '-b') {
         var http = require('http');
-        var fs = require('fs');
         bs = true;
 
         // Security Object
@@ -124,6 +124,15 @@ so.init(3303, 0, {                                                              
               var temp = Number(json.main['temp']);
               temperature.push(temp);
 
+              // Write temp to file
+              var d = new Date();
+              fs.appendFile('tmp.csv', json.name + '\n' + d.getHours() + ',' + temp + '\n', function (err) {
+                  if (err) {
+                    console.log(err);
+                  }
+              });
+
+              // Multicast to radiators
               /*var limit = so.get('3308', 0, '5900');
               if (temp < limit) {
                 cnode.multicast('/3306/0/5850', 'PUT', 1, function(err, rsp) {
@@ -145,6 +154,7 @@ so.init(3303, 0, {                                                              
             var temp = getRandomArbitrary(0, 30);
             temperature.push(temp);
 
+            // Multicast to heaters
             /*var limit = so.get('3308', 0, '5900');
             if (temp < limit) {
               cnode.multicast('/3306/0/5850', 'PUT', 'true', function(err, rsp) {
@@ -184,8 +194,8 @@ so.init(3303, 0, {                                                              
         }
       }
     },
-    5603: 1.1,                                                                  // Min range measured value
-    5604: 29.9,                                                                 // Max range measured value
+    5603: 0.0,                                                                  // Min range measured value
+    5604: 30.0,                                                                 // Max range measured value
     5605: {                                                                     // Reset
       exec: function(cb) {
         if (temperature.length > 0) {
@@ -244,8 +254,8 @@ so.init(3304, 0, {
       }
     }
   },
-  5603: 1.1,                                                                    // Min range measured value
-  5604: 99.9,                                                                   // Max range measured value
+  5603: 0.0,                                                                    // Min range measured value
+  5604: 100.0,                                                                  // Max range measured value
   5605: {                                                                       // Factory Reset
     exec: function(cb) {
       if (humidity.length > 0) {
@@ -260,6 +270,7 @@ so.init(3304, 0, {
   }
 });
 
+/*
 // Set point
 var point = 15.2;
 var application = 'Temperature limit';
@@ -267,7 +278,7 @@ so.init(3308, 0, {
   5900: point,
   5701: 'Cel',
   5750: application
-});
+});*/
 
 
 // Exec Functions
@@ -326,14 +337,19 @@ function find(mode) {
   if (mode === '-t')  {
     weather.defaults ({units:'metric', lang:'en', mode:'json'});
     weather.now ({lat:latitude, lon:longitude, APPID:'a7a67efb8526ba99aeb2b8f0d63cc18a'},function(err, json) {
-        latitude = json.coord['lat'].toString();
-        longitude = json.coord['lon'].toString();
-        status = true;
+        if (!err) {
+            latitude = json.coord['lat'].toString();
+            longitude = json.coord['lon'].toString();
+            status = true;
 
-        if (json.name != '')
-            console.log('Weather station: ' + json.name + ', ' + json.sys['country']);
-        else
+            if (json.name != '')
+                console.log('Weather station: ' + json.name + ', ' + json.sys['country']);
+            else
+                console.log('No real sensor found. Sensor with random data');
+
+        } else {
             console.log('No real sensor found. Sensor with random data');
+        }
     });
 
   } else {

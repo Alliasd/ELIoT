@@ -108,14 +108,13 @@ var status = false,
 so.init(3306, 0, {
   5850: {                                                                       // On/Off
     read: function (cb) {
-        status = Boolean(status);
         cb(null, status);
     },
     write: function (val, cb) {
-      if (Boolean(val) === true && Boolean(status) === false) {
+      if (Boolean(val) === true && status === false) {
           status = true;
           start = new Date();
-      } else if (Boolean(val) === false && Boolean(status) === true) {
+      } else if (Boolean(val) === false && status === true) {
           status = false;
       }
       val = Boolean(val);
@@ -124,7 +123,7 @@ so.init(3306, 0, {
   },
   5852: {                                                                       // On time
     read: function(cb) {
-      if (Boolean(status) === true) {
+      if (status === true) {
         var end = Math.round((new Date() - start) / 1000);
         cb(null,end);
       }
@@ -134,7 +133,7 @@ so.init(3306, 0, {
       }
     },
     write: function(val, cb) {
-      if (val === 0 && Boolean(status) === true) {
+      if (val === 0 && status === true) {
           start = new Date();
           cb(null, val);
       }

@@ -11,7 +11,7 @@ var ip = process.argv[2],
     bs = false;
 
 // Command line arguments
-process.argv.forEach(function (val, index, array) {
+process.argv.forEach(function (val) {
     // Bootstrap
     if (val === '-b') {
         var http = require('http');
@@ -111,10 +111,10 @@ so.init(3311, 0, {
         cb(null, control);
       },
       write: function (val, cb) {
-        if (Boolean(val) === true && Boolean(control) === false) {
+        if (Boolean(val) === true && control === false) {
           control = true;
           start = new Date();
-        } else if (Boolean(val) === false && Boolean(control) === true){
+        } else if (Boolean(val) === false && control === true){
           control = false;
         }
         val = Boolean(val);
@@ -125,7 +125,7 @@ so.init(3311, 0, {
     5701: 'Cel',                                                                // Unit
     5852: {                                                                     // On time
       read: function(cb) {
-        if (Boolean(control) === true) {
+        if (control === true) {
           var end = Math.round((new Date() - start) / 1000);
           cb(null,end);
         }
@@ -135,7 +135,7 @@ so.init(3311, 0, {
         }
       },
       write: function(val, cb) {
-        if (val === 0 && Boolean(control) === true) {
+        if (val === 0 && control === true) {
             start = new Date();
             cb(null, val);
         }

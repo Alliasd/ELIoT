@@ -103,28 +103,28 @@ so.init(4, 0, {
 
 // Presence Sensor
 var state = false,
-    array = ['false', 'true'],
+    array = [false, true],
     counter = 0;
 
 so.init(3302,0, {
   5500: {
     read: function(cb) {
       var val = array[Math.floor(Math.random()*array.length)];
-      if (val === 'true' && Boolean(state) === false) {
+      if (val === true && state === false) {
           state = true;
           counter += 1;
-          /*cnode.multicast('/3311/0/5850', 'PUT', '1', function(err, rsp) {
+          cnode.multicast('/3311/0/5850', 'PUT', true, function(err, rsp) {
             if (err) {
               console.log(err);
             }
-          });*/
-      } else if (val === 'false' && Boolean(state) === true) {
+          });
+      } else if (val === false && state === true) {
           state = false;
-          /*cnode.multicast('/3311/0/5850', 'PUT', '0', function(err, rsp) {
+          cnode.multicast('/3311/0/5850', 'PUT', false, function(err, rsp) {
             if (err) {
               console.log(err);
             }
-          });*/
+          });
       }
       cb(null, state);
     }

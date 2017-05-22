@@ -1,23 +1,106 @@
-var coap = require('coap');
-var CoapNode = require('./index.js');
+//var coap = require('coap');
+var CoapNode = require('coap-node');
 var SmartObject = require('smartobject');
-var config = require('./lib/config');
+var shortid = require('shortid');
+var SunCalc = require('suncalc');
 
-var number = getRandomInt(1, 1000);
 var so = new SmartObject;
-var cnode = new CoapNode('Cabinet'+number, so);
+var ID = shortid.generate();
+var cnode = new CoapNode('Cabinet_'+ID, so);
 
-//LWM2M Server ip
-var ip = process.argv[2];
+// Config parameters
+var ip = process.argv[2],
+    bs = false;
 
-var num = getRandomArbitrary(-90, 90);
-var latitude = (Math.round(num*10) / 100).toString();
-num = getRandomArbitrary(-180, 180);
-var longitude = (Math.round(num*10) / 100).toString();
+// Command line arguments
+process.argv.forEach(function (val) {
+    // Bootstrap
+    if (val === '-b') {
+        var http = require('http');
+        var fs = require('fs');
+        bs = true;
 
+        // Security Object
+        so.init(0, 0, {0: 'coap://'+ip+':5683', 1: true, 2: 3});
+        so.init(0, 1, {0: '', 1: false, 2: 3, 3: '', 4: '', 5: '', 6: 3, 7: '', 8: '', 9: '', 10: 0, 11: 0});
 
+        // Server Object
+        so.init(1, 1, {0: 1, 1: cnode.lifetime, 2: cnode._config.defaultMinPeriod, 3: cnode._config.defaultMaxPeriod, 6: false, 7: 'U'});
 
-// Init objects+resources
+        // Send bootstrap information to BS Server
+        var options = {
+          hostname: ip,
+          port: 8080,
+          path: '/api/bootstrap/' + cnode.clientName,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+
+        var stream = fs.createReadStream('./data.json');
+        var req = http.request(options, function(res) {
+          // Send bootstrap request
+          cnode.bootstrap(ip, 5683, function (err, rsp) {
+              if (err) {
+                console.log(err);
+              }
+          });
+        });
+
+        req.on('error', (e) => {
+          console.log(`problem with request: ${e.message}`);
+        });
+
+        stream.pipe(req);
+    }
+});
+
+// Init LWM2M objects
+
+// Server Object
+so.init(1, 0, {
+  0: 0,                                                                         // ServerID
+  1: cnode.lifetime,                                                            // Lifetime
+  2: cnode._config.defaultMinPeriod,
+  3: cnode._config.defaultMaxPeriod,
+  6: false,
+  7: 'U',
+  8: {                                                                          // Update
+    exec: function(attrs, cb) {
+      update(attrs);
+      cb(null)
+    }
+  }
+});
+
+// Device Object
+so.init(3, 0, {
+  0: 'Manu',              		                                                  // Manufactorer name
+  1: getRandomInt(1, 100).toString(),                                           // Model number
+  5: {                                                                          // Reset
+    exec: function(cb) {
+      reset();
+      cb(null);
+    }
+  },
+  16: 'U'                                                                       // Binding mode
+});
+
+// Location Object
+so.init(6, 0, {
+  0: (Math.round(getRandomArbitrary(-90, 90)*10) / 100).toString(),             // Latitude
+  1: (Math.round(getRandomArbitrary(-180, 180)*10) / 100).toString(),           // Longitude
+  5: Math.floor(Date.now() / 1000)                                              // Timestamp
+});
+
+// Connection Monitoring
+so.init(4, 0, {
+  4: cnode.ip,
+  5: 'unknown'
+});
+
+// Init IPSO objects
 
 // Illuminance
 var illuminance0 = [];
@@ -26,8 +109,7 @@ so.init(3301, 0, {
     read: function (cb) {
       var date = new Date();
       var time = date.getHours() + '.' + date.getMinutes();
-      time = Number(time);
-      illuminance(time, function(val) {
+      illuminance(Number(time), function(val) {
           var rounded = Math.round(val*10) / 10;
           illuminance0.push(rounded);
           cb(null, rounded);
@@ -77,8 +159,7 @@ so.init(3301, 1, {
     read: function (cb) {
       var date = new Date();
       var time = date.getHours() + '.' + date.getMinutes();
-      time = Number(time);
-      illuminance(time, function(val) {
+      illuminance(Number(time), function(val) {
         var rounded = Math.round(val*10) / 10;
         illuminance1.push(rounded);
         cb(null, rounded);
@@ -128,8 +209,7 @@ so.init(3301, 2, {
     read: function (cb) {
       var date = new Date();
       var time = date.getHours() + '.' + date.getMinutes();
-      time = Number(time);
-      illuminance(time, function(val) {
+      illuminance(Number(time), function(val) {
         var rounded = Math.round(val*10) / 10;
         illuminance2.push(rounded);
         cb(null, rounded);
@@ -181,73 +261,56 @@ so.init(3340, 0, {
   5523: {                                         // Trigger
     exec: function(arg, cb) {
       var val = arg[1];
-      Trigger(val, function(err) {
-        if (err) {
-          cb(err);
-        } else {
-          cb(null, { status: 'ok', value: val });
-        }
-      });
+      Trigger(val);
+      cb(null);
     }
   },
   5850: {
     read: function (cb) {
-      control = Boolean(control);
       cb(null, control);
     },
     write: function (val, cb) {
-      if (Boolean(val) === true && Boolean(control) === false) {
+      if (Boolean(val) === true && control === false) {
         control = Boolean(val);
         var today = new Date();
-        console.log('today', today.getHours());
 
-        if (today.getHours() < 3) {
-            today.setHours(3);
+        if (today.getHours() < 17) {
+            today.setHours(17);
             today.setMinutes(0);
             today.setSeconds(0);
             target = Math.round(Date.parse(today.toString())/1000);
             timeout = target - Math.round(Date.now()/1000);
             setTimeout(function () {
-              return Trigger('1');
+              return Trigger(true);
             }, timeout*1000);
-        } else if (today.getHours() >= 3 && today.getHours() < 15) {
-            today.setHours(15);
-            today.setMinutes(0);
-            today.setSeconds(0);
-            target = Math.round(Date.parse(today.toString())/1000);
-            timeout = target - Math.round(Date.now()/1000);
-            setTimeout(function () {
-              return Trigger('1');
-            }, timeout*1000);
-        } else if (today.getHours() >= 15 && today.getHours() < 21) {
+        } else if (today.getHours() >= 17 && today.getHours() < 22) {
             today.setHours(today.getHours()+1);
             today.setMinutes(0);
             today.setSeconds(0);
             target = Math.round(Date.parse(today.toString())/1000);
             timeout = target - Math.round(Date.now()/1000);
             setTimeout(function () {
-              return Trigger('1');
+              return Trigger(true);
             }, timeout*1000);
         } else {
             today.setDate(today.getDate() + 1)
-            today.setHours(3);
+            today.setHours(17);
             today.setMinutes(0);
             today.setSeconds(0);
             target = Math.round(Date.parse(today.toString())/1000);
             timeout = target - Math.round(Date.now()/1000);
             setTimeout(function () {
-              return Trigger('1');
+              return Trigger(true);
             }, timeout*1000);
         }
 
-      } else if (Boolean(val) === false && Boolean(control) === true) {
+      } else if (Boolean(val) === false && control === true) {
           control = Boolean(val);
           timeout = 0;
           target = 0;
       }
 
-      val = Boolean(val);
-      cb(null, val);
+      cb(null, Boolean(val));
     }
   },
   5521: {
@@ -268,222 +331,153 @@ so.init(3340, 0, {
   }
 });
 
-// Server Object
-var min, max;
-so.init(1, 0, {
-  0: getRandomInt(1, 65535),                           // ServerID
-  1: {                                                 // Lifetime
-    read: function(cb) {
-      cb(null, cnode.lifetime);
-    },
-    write: function(val, cb) {
-      cnode.lifetime = val;
-      cb(null, cnode.lifetime);
-    }
-  },
-  2: {
-    read: function(cb) {
-      cb(null, min || config.defaultMinPeriod);
-    },
-    write: function(val, cb) {
-      min = val;
-      cb(null, min);
-    }
-  },
-  3: {
-    read: function(cb) {
-      cb(null, max || config.defaultMaxPeriod);
-    },
-    write: function(val, cb) {
-      max = val;
-      cb(null, max);
-    }
-  },
-  8: {                                                // Update
-    exec: function(cb) {
-      update();
-      cb(null);
-    }
-  }
-});
-
-// Device Object
-so.init(3, 0, {
-  0: 'Manufactorer1'+number,		                     // Manufactorer name
-  1: getRandomInt(1, 10000).toString(),              // Model number
-  4: {
-    exec: function(cb) {                             // Reboot
-      reboot();
-      cb(null);
-    }
-  },
-  5: {                                               // Reset
-    exec: function(cb) {
-      cnode.lifetime = 86400;
-      min = config.defaultMinPeriod;
-      max = config.defaultMaxPeriod;
-      cb(null);
-    }
-  },
-  13: {
-    read: function(cb) {
-      var date = new Date();
-      var n = date.toString();
-      cb(null, n);
-      //var seconds = Math.round(date.getTime() / 1000);
-    }
-  },
-  16: 'U'                                           // Binding mode
-});
-
-// Location Object
-so.init(6, 0, {
-  0: {                                              // Latitude
-    read: function(cb) {
-      cb(null, latitude);
-    }
-  },
-  1: {                                              // Longitude
-    read: function(cb) {
-      cb(null, longitude)
-    }
-  },
-  5: Math.floor(Date.now() / 1000)                  // Timestamp
-});
-
-// Connection Monitoring
-so.init(4, 0, {
-  4: {
-    read: function(cb) {
-      cb(null, cnode.ip);
-    }
-  },
-  5: {
-    read: function(cb) {
-      cb(null, cnode.so.connMonitor[0].routeIp);
-    }
-  }
-});
-
 // Support Functions
 
+// Update
+function update(attrs) {
+  // Set lifetime, version attributes
+  cnode.update({lifetime: attrs}, {version: '1.0.0'}, function (err, rsp) {
+    if(err) {
+      console.log(err);
+    }
+  });
+}
+
+// Factory reset
+function reset() {
+  if (bs === false) {
+    so.set('1',0,'1', 86000);
+    so.set('1',0,'2', 10);
+    so.set('1',0,'3', 60);
+
+    // Delete all extra object instances
+    var obj = cnode.getSmartObject();
+    for (var i=0, item; item = obj.objectList()[i]; i++) {
+        for (var j=1; item.iid[j]; j++) {
+            cnode.deleteInst(item.oid, item.iid[j]);
+        }
+    }
+
+    //Re-register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+
+  } else {
+    // Re-bootstrap
+    ip = so.get('0', 0, '0');
+    ip = ip.substring(7, ip.length);
+    ip = ip.substring(0, ip.indexOf(':'));
+    cnode.bootstrap(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+  }
+}
+
+// Calculate the illuminance depending on the time of the day
 function illuminance(time, callback) {
     var lumen;
+    var times = SunCalc.getTimes(new Date(), 60.2, 24.9);  // Helsinki
 
-    if ((time > 3.30 && time <= 4.30) || (time >= 15.30 && time < 16.30)) {
-      lumen = getRandomArbitrary(1.0, 10);
-    } else if ((time > 4.30 && time <= 5.00) || (time > 15.00 && time < 15.30)) {
-      lumen = getRandomArbitrary(10, 100);
-    } else if ((time > 5.00 && time <= 6.00) || (time > 14.00 && time <= 15.00)) {
-      lumen = getRandomArbitrary(100, 1000);
-    } else if (time > 6.00 && time <= 14.00) {
-      lumen = getRandomArbitrary(1000, 10000);
+    //Check Daylight Hours:
+    var sunrise = Number(times.sunrise.getHours() + '.' + times.sunrise.getMinutes()),
+        sunset = Number(times.sunset.getHours() + '.' + times.sunset.getMinutes()),
+        dawn = Number(times.dawn.getHours() + '.' + times.dawn.getMinutes()),
+        dusk = Number(times.dusk.getHours() + '.' + times.dusk.getMinutes()),
+        nauticalDawn = Number(times.nauticalDawn.getHours() + '.' + times.nauticalDawn.getMinutes()) || null,
+        nauticalDusk = Number(times.nauticalDusk.getHours() + '.' + times.nauticalDusk.getMinutes()) || null,
+        night = Number(times.night.getHours() + '.' + times.night.getMinutes()) || null,
+        nightEnd = Number(times.nightEnd.getHours() + '.' + times.nightEnd.getMinutes()) || null;
+
+    if ((time >= sunrise && time < nauticalDawn) || (time >= dusk && time < nauticalDusk) || nauticalDusk == null) {
+        lumen = getRandomArbitrary(10, 100);
+    } else if ((time >= nightEnd && time < sunrise) || (time >= nauticalDusk && time < night) || night == null) {
+        lumen = getRandomArbitrary(1.0, 10);
+    } else if ((time >= nauticalDawn && time < dawn) || (time >= sunset && time < dusk)) {
+        lumen = getRandomArbitrary(100, 1000);
+    } else if (time >= night || time < nightEnd) {
+        lumen = getRandomArbitrary(0.001, 1.0);
     } else {
-      lumen = getRandomArbitrary(0.001, 1.0);
+        lumen = getRandomArbitrary(1000, 10000);
     }
 
     callback(lumen);
 }
 
-
-
-
 // Trigger Timer action
 function Trigger(val) {
   var lx_tot = 0;
   var counter = 0;
+  var promises = [];
 
-  so.read('3301','0','5700', function(err,value) {
-    if(!err) {
-      lx_tot += value;
-      counter += 1;
-    }
-    so.read('3301','1','5700', function(err,value) {
-      if(!err) {
-        lx_tot += value;
-        counter += 1;
-      }
-      so.read('3301','2','5700', function(err,value) {
-        if(!err) {
-          lx_tot += value;
-          counter += 1;
-        }
-        lx_tot = lx_tot/counter;
-        console.log('tot', lx_tot);
+  // read all sensors in parallell
+  for (var i = 0; i < 3; i++) {
+      promises.push(readSensor(i));
+  }
+
+  // Read Sensor value
+  function readSensor(iid) {
+      return new Promise(function(resolve, reject) {
+          so.read('3301', iid, '5700', function(err, data) {
+            if (err) return reject(err);
+            resolve(data);
+          });
       });
-    });
+  };
+
+  // All data is here
+  Promise.all(promises).then(function(results) {
+      lx_tot = (results[0] + results[1] + results[2]) / 3;
+      var h = new Date();
+
+      if (h.getHours() === 23) {
+          cnode.multicast('/3311/0/5850', 'PUT', val, function(err, rsp) {
+            if (!err) {
+              so.set('3340', '0', '5850', false);
+              target = 0;
+              timeout = 0;
+              setTimeout(function () {
+                return so.set('3340', '0', '5850', true);
+              }, 3700*1000);
+            }
+          });
+      } else {
+          if (lx_tot < 200 || h.getHours() >= 20) {
+              cnode.multicast('/3311/0/5850', 'PUT', val, function(err, rsp) {
+                if (!err) {
+                  h.setHours(23);
+                  h.setMinutes(0);
+                  h.setSeconds(0);
+                  target = Math.round(Date.parse(h.toString())/1000);
+                  timeout = target - Math.round(Date.now()/1000);
+                  setTimeout(function () {
+                    return Trigger(false);
+                  }, timeout*1000);
+                }
+              });
+          } else {
+              h.setHours(h.getHours() + 1);
+              h.setMinutes(0);
+              h.setSeconds(0);
+              target = Math.round(Date.parse(h.toString())/1000);
+              timeout = target - Math.round(Date.now()/1000);
+              setTimeout(function () {
+                return Trigger(true);
+              }, timeout*1000);
+          }
+      }
+
+      var stat = so.get('3311', '0', '5850');
+      if (stat = true && lx_tot > 200) {
+        cnode.multicast('/3311/0/5851', 'PUT', 60);
+      } else if (stat = true && lx_tot < 200) {
+        cnode.multicast('/3311/0/5851', 'PUT', 100);
+      }
   });
-
-  var h = new Date();
-  console.log('h', h.getHours());
-  if (h.getHours() === 6 || h.getHours() === 18 || h.getHours() === 21) {
-    cnode.multicast('/3311/0/5850', 'PUT', val, function(err, rsp) {
-      if (!err) {
-        so.write('3340', '0', '5850', false);
-        target = 0;
-        timeout = 0;
-        setTimeout(function () {
-          return so.write('3340', '0', '5850', true);
-        }, 3700*1000);
-      }
-    });
-
-  } else if (h.getHours() === 3) {
-    if (lx_tot < 200) {
-      cnode.multicast('/3311/0/5850', 'PUT', val, function(err, rsp) {
-        if (!err) {
-          so.write('3340', '0', '5850', false);
-          h.setHours(6);
-          h.setMinutes(0);
-          h.setSeconds(0);
-          target = Math.round(Date.parse(h.toString())/1000);
-          timeout = target - Math.round(Date.now()/1000);;
-          setTimeout(function () {
-            return Trigger('0');
-          }, timeout*1000);
-        }
-      });
-    } else {
-      so.write('3340', '0', '5850', false);
-      target = 0;
-      timeout = 0;
-      setTimeout(function () {
-        return so.write('3340', '0', '5850', true);
-      }, 3700*1000);
-    }
-
-  } else {
-    if (lx_tot < 200) {
-      cnode.multicast('/3311/0/5850', 'PUT', val, function(err, rsp) {
-        if (!err) {
-          so.write('3340', '0', '5850', false);
-          h.setHours(21);
-          h.setMinutes(0);
-          h.setSeconds(0);
-          target = Math.round(Date.parse(h.toString())/1000);
-          timeout = target - Math.round(Date.now()/1000);;
-          setTimeout(function () {
-            return Trigger('0');
-          }, timeout*1000);
-        }
-      });
-    } else {
-      so.write('3340', '0', '5850', false);
-      target = 0;
-      timeout = 0;
-      setTimeout(function () {
-        return so.write('3340', '0', '5850', true);
-      }, 10*1000);
-    }
-  }
-
-  var stat = so.read('3311', '0', '5850');
-  if (stat = true && lx_tot > 200) {
-    cnode.multicast('/3311/0/5851', 'PUT', 60);
-  } else if (stat = true && lx_tot < 200) {
-    cnode.multicast('/3311/0/5851', 'PUT', 100);
-  }
-
 }
 
 // Random float number generator
@@ -499,26 +493,30 @@ function getRandomInt(min, max) {
 
 // Event handlers
 
+// Trap signals -> de-register
+process.on('SIGTERM', function() {
+  process.stdout.write('\n');
+  cnode.deregister(function (err, rsp) {
+      if (err) {
+        console.log(err);
+      }
+      process.exit();
+  });
+});
+
+process.on('SIGINT', function() {
+  process.stdout.write('\n');
+  cnode.deregister(function (err, rsp) {
+      if (err) {
+        console.log(err);
+      }
+      process.exit();
+  });
+});
+
 // This event fired when the device registered (2.01)
 cnode.on('registered', function () {
   console.log('registered');
-
-  // Client terminated -> de-register
-  process.on('SIGTERM', function() {
-    process.stdout.write('\n');
-    cnode.deregister(function (err, rsp) {
-          //console.log(rsp);
-          process.exit();
-    });
-  });
-
-  process.on('SIGINT', function() {
-    process.stdout.write('\n');
-    cnode.deregister(function (err, rsp) {
-          //console.log(rsp);
-          process.exit();
-    });
-  });
 });
 
 // This event fired when there is an announce from the Server
@@ -541,9 +539,30 @@ cnode.on('deregistered', function () {
     console.log('deregistered');
 });
 
-// Register
-cnode.register(ip, 5683, function (err, rsp) {
-  if (err) {
-    console.log(err);
-  }
+// This event fired when the device bootstrapped (2.02).
+cnode.on('bootstrapped', function () {
+    console.log('bootstrapped');
+
+    ip = so.get('0', 1, '0');
+    ip = ip.substring(7, ip.length);
+    ip = ip.substring(0, ip.indexOf(':'));
+
+    // Register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
 });
+
+// No BS server
+if (bs === false) {
+
+    so.init(0, 0, { 0: 'coap://' + ip + ':5683', 1: false, 2: 3});
+    // Register
+    cnode.register(ip, 5683, function (err, rsp) {
+        if (err) {
+          console.log(err);
+        }
+    });
+}
