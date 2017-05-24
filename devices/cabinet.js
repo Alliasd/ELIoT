@@ -380,8 +380,8 @@ function reset() {
 
 // Calculate the illuminance depending on the time of the day
 function illuminance(time, callback) {
-    var lumen;
-    var times = SunCalc.getTimes(new Date(), 60.2, 24.9);  // Helsinki
+    var lumen,
+        times = SunCalc.getTimes(new Date(), 60.2, 24.9);  // Helsinki 60.2, 24.9
 
     //Check Daylight Hours:
     var sunrise = Number(times.sunrise.getHours() + '.' + times.sunrise.getMinutes()),
@@ -393,16 +393,17 @@ function illuminance(time, callback) {
         night = Number(times.night.getHours() + '.' + times.night.getMinutes()) || null,
         nightEnd = Number(times.nightEnd.getHours() + '.' + times.nightEnd.getMinutes()) || null;
 
-    if ((time >= sunrise && time < nauticalDawn) || (time >= dusk && time < nauticalDusk) || nauticalDusk == null) {
-        lumen = getRandomArbitrary(10, 100);
-    } else if ((time >= nightEnd && time < sunrise) || (time >= nauticalDusk && time < night) || night == null) {
-        lumen = getRandomArbitrary(1.0, 10);
-    } else if ((time >= nauticalDawn && time < dawn) || (time >= sunset && time < dusk)) {
-        lumen = getRandomArbitrary(100, 1000);
-    } else if (time >= night || time < nightEnd) {
-        lumen = getRandomArbitrary(0.001, 1.0);
-    } else {
+
+    if (time >= sunrise && time < sunset) {
         lumen = getRandomArbitrary(1000, 10000);
+    } else if ((time >= dawn && time < sunrise) || (time >= sunset && time < dusk)) {
+        lumen = getRandomArbitrary(100, 1000);
+    } else if ((time >= nauticalDawn && time < dawn) || (time >= dusk && time < nauticalDusk) || nauticalDawn == null) {
+        lumen = getRandomArbitrary(10, 100);
+    } else if ((time >= nightEnd && time < nauticalDawn) || (time >= nauticalDusk && time < night) || night == null) {
+        lumen = getRandomArbitrary(1.0, 10);
+    } else {
+        lumen = getRandomArbitrary(0.001, 1.0);
     }
 
     callback(lumen);
