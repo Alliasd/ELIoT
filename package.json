@@ -5,8 +5,8 @@
   "dependencies": {
     "coap-node": "https://github.com/Alliasd/coap-node/tarball/master",
     "openweathermap": "^1.0.0",
-    "shortid": "^2.2.6",
     "promise": "^7.1.1",
+    "shortid": "^2.2.6",
     "suncalc": "^1.8.0"
   },
   "devDependencies": {
@@ -17,7 +17,12 @@
     "url": "https://github.com/Alliasd/ELIOT.git"
   },
   "keywords": [
-    "coap", "lwm2m", "leshan", "eliot", "device management", "IoT-emulator"
+    "coap",
+    "lwm2m",
+    "leshan",
+    "eliot",
+    "device management",
+    "IoT-emulator"
   ],
   "author": "",
   "license": "MIT",
@@ -26,4 +31,3 @@
   },
   "homepage": "https://github.com/Alliasd/ELIOT"
 }
-
