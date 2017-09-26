@@ -15,25 +15,28 @@ services:
         command: bootstrap
     weather:
         image: alliasd/eliot
-        command: weather.js ms
+        command: ${WEATHER}
         depends_on:
         - bss
         - ms
     presence:
         image: alliasd/eliot
-        command: presence.js ms
+        command: ${PRESENCE}
         depends_on:
         - bss
         - ms
     radiator:
        image: alliasd/eliot
-       command: radiator.js ms
+       command: ${RADIATOR}
        depends_on:
        - bss
        - ms
     light:
        image: alliasd/eliot
-       command: light_control.js ms
+       command: ${LIGHT}
        depends_on:
        - bss
        - ms
+
+
+

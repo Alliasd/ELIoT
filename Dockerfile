@@ -6,11 +6,12 @@ RUN cd /tmp && npm install
 
 # Create app directory
 RUN mkdir -p /src/app && cp -a /tmp/node_modules /src/app/
-WORKDIR /src/app
 
 #Bundle app source
 ADD . /src/app
-ADD . ./devices /src/app/
+
+#Set the working directory to point to the device applications
+WORKDIR /src/app/devices
 
 # Application's default ports
 EXPOSE 5683
