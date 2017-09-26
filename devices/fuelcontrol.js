@@ -1,4 +1,4 @@
-var CoapNode = require('./index.js');
+var CoapNode = require('coap-node');
 var SmartObject = require('smartobject');
 var shortid = require('shortid');
 
@@ -37,7 +37,7 @@ process.argv.forEach(function (val) {
           }
         };
 
-        var stream = fs.createReadStream('./data.json');
+        var stream = fs.createReadStream('../data.json');
         var req = http.request(options, function(res) {
           // Send bootstrap request
           cnode.bootstrap(ip, 5683, function (err, rsp) {
@@ -221,9 +221,9 @@ so.init(3323, 0, {
     read: function(cb) {
       var pressure = getRandomArbitrary(20,90);
       if (pressure >= 30 && pressure <= 80)
-          so.set('3306', '1', '5850', 0);
+          so.set('3306', '1', '5850', false);
       else
-          so.set('3306', '1', '5850', 1);
+          so.set('3306', '1', '5850', true);
 
       cb(null, pressure);
     }
@@ -280,8 +280,6 @@ function sensorValue(max) {
 // Change Status of injector
 function statusChange() {
   so.set('3306', 0, '5850', false);
-  var test = so.get('3306', 0, '5850');
-  console.log(test);
   setTimeout(function () {
     return injector();
   }, 20000);
@@ -293,22 +291,17 @@ function injector() {
 
   injectionTime(function(time) {
     injection_time = time;
-    console.log(time);
+    so.set('3306', 0, '5850', true);
   });
 
-  so.set('3306', 0, '5850', true);
-  var test = so.get('3306', 0, '5850');
-  console.log(test);
-
   setTimeout(function () {
-    console.log('injection',injection_time);
     return statusChange();
   }, (Number(injection_time)*1000));
 }
 
 
 function injectionTime(callback) {
-  var Promise = require('bluebird');
+  var Promise = require('promise');
   var list = ['3303/0', '3316/0', '3346/0', '3346/1'];
   var promises = [];
 

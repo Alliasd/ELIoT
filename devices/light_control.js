@@ -4,7 +4,7 @@ var shortid = require('shortid');
 
 var so = new SmartObject;
 var ID = shortid.generate();
-var cnode = new CoapNode('LightController'+'_'+ID, so);
+var cnode = new CoapNode('LightControl'+'_'+ID, so);
 
 // Config parameters
 var ip = process.argv[2],
@@ -36,7 +36,7 @@ process.argv.forEach(function (val) {
           }
         };
 
-        var stream = fs.createReadStream('./data.json');
+        var stream = fs.createReadStream('../data.json');
         var req = http.request(options, function(res) {
           // Send bootstrap request
           cnode.bootstrap(ip, 5683, function (err, rsp) {

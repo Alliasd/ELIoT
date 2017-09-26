@@ -37,7 +37,7 @@ process.argv.forEach(function (val, index, array) {
           }
         };
 
-        var stream = fs.createReadStream('./data.json');
+        var stream = fs.createReadStream('../data.json');
         var req = http.request(options, function(res) {
           // Send bootstrap request
           cnode.bootstrap(ip, 5683, function (err, rsp) {

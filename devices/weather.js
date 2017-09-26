@@ -7,7 +7,7 @@ var fs = require('fs');
 
 var so = new SmartObject;
 var ID = shortid.generate();
-var cnode = new CoapNode('Weather_'+ID, so);
+var cnode = new CoapNode('WeatherObserver'+'_'+ID, so);
 
 // Config parameters
 var ip = process.argv[2],
@@ -46,7 +46,7 @@ process.argv.forEach(function (val) {
           }
         };
 
-        var stream = fs.createReadStream('./data.json');
+        var stream = fs.createReadStream('../data.json');
         var req = http.request(options, function(res) {
           // Send bootstrap request
           cnode.bootstrap(ip, 5683, function (err, rsp) {
