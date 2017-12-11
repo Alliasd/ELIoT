@@ -19,6 +19,8 @@ More detailed information about ELIOT can be found from [wiki](https://github.co
 
 ## Usage with Docker
 
+![alt text](https://github.com/Alliasd/ELIoT/blob/master/eliot.gif)
+
 1. Run the LWM2M Server:
 
    `docker run --rm -ti --name ms corfr/leshan `
@@ -56,3 +58,7 @@ More detailed information about ELIOT can be found from [wiki](https://github.co
    `docker-compose up`
 
    `docker-compose scale weather=X presence=X radiator=X light=X`
+
+
+![alt text](https://github.com/Alliasd/ELIoT/blob/master/eliot.gif)
+   
