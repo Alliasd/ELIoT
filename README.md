@@ -59,6 +59,3 @@ More detailed information about ELIOT can be found from [wiki](https://github.co
 
    `docker-compose scale weather=X presence=X radiator=X light=X`
 
-
-![alt text](https://github.com/Alliasd/ELIoT/blob/master/eliot.gif)
-   
